@@ -202,6 +202,41 @@ tbody td{padding:8px 10px}
   margin-bottom:14px;
 }
 
+/* ── MODAL CONTRASEÑA ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(11,45,95,.55);
+  z-index:999;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{
+  background:var(--white);border-radius:var(--rL);padding:28px 24px;
+  width:min(320px,90vw);box-shadow:0 20px 60px rgba(11,45,95,.2);
+  transform:translateY(8px);transition:transform .2s;
+}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+.modal-title{font-size:15px;font-weight:600;color:var(--navy);margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--g400);margin-bottom:18px}
+.modal-pin{
+  display:flex;gap:10px;justify-content:center;margin-bottom:18px;
+}
+.pin-digit{
+  width:44px;height:52px;border:2px solid var(--g200);border-radius:10px;
+  font-size:22px;font-weight:600;text-align:center;color:var(--navy);
+  font-family:inherit;background:var(--g50);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  -webkit-text-security:disc;
+}
+.pin-digit:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(26,128,128,.15);background:var(--white)}
+.pin-digit.error{border-color:var(--red);animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.modal-btns{display:flex;gap:8px}
+.btn-cancel{flex:1;padding:10px;border:1px solid var(--g200);border-radius:8px;background:var(--white);font-family:inherit;font-size:13px;color:var(--g600);cursor:pointer;transition:background .15s}
+.btn-cancel:hover{background:var(--g50)}
+.btn-confirm{flex:1;padding:10px;border:none;border-radius:8px;background:var(--teal);font-family:inherit;font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:background .15s}
+.btn-confirm:hover{background:var(--teal2)}
+.pin-error-msg{font-size:11px;color:var(--red);text-align:center;margin-top:-10px;margin-bottom:10px;min-height:16px}
+
 /* ── SECCIÓN TÍTULO ── */
 .sec-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--g400);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--g100)}
 
@@ -253,7 +288,7 @@ tbody td{padding:8px 10px}
       <p>Selección, Evaluación y Formación · RRHH</p>
     </div>
     <div class="hdr-actions">
-      <button class="btn-upload" onclick="document.getElementById('file-input').click()">
+      <button class="btn-upload" onclick="openPin()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
@@ -505,6 +540,25 @@ tbody td{padding:8px 10px}
     <span class="bot-lbl">Áreas</span>
   </button>
 </nav>
+
+<!-- MODAL CONTRASEÑA -->
+<div class="modal-overlay" id="pin-modal">
+  <div class="modal-box">
+    <div class="modal-title">🔒 Acceso restringido</div>
+    <div class="modal-sub">Introduce el PIN para actualizar los datos</div>
+    <div class="modal-pin">
+      <input class="pin-digit" id="p1" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="pinNext(this,'p2')" onkeydown="pinKey(event,this,null)">
+      <input class="pin-digit" id="p2" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="pinNext(this,'p3')" onkeydown="pinKey(event,this,'p1')">
+      <input class="pin-digit" id="p3" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="pinNext(this,'p4')" onkeydown="pinKey(event,this,'p2')">
+      <input class="pin-digit" id="p4" type="password" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="pinNext(this,null)" onkeydown="pinKey(event,this,'p3')">
+    </div>
+    <div class="pin-error-msg" id="pin-error"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closePin()">Cancelar</button>
+      <button class="btn-confirm" onclick="checkPin()">Confirmar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ═══════ ESTADO GLOBAL ═══════
@@ -1081,6 +1135,80 @@ function renderAreas(){
 })();
 
 // ═══════ SERVICE WORKER (PWA) ═══════
+// ═══════ PIN DE SEGURIDAD ═══════
+// Cambia este valor por tu PIN de 4 dígitos
+const PIN_HASH = (()=>{ 
+  // SHA-256 simple del PIN "1234" — cámbialo por el tuyo:
+  // Para generar el hash de otro PIN abre la consola del navegador y ejecuta:
+  // crypto.subtle.digest('SHA-256', new TextEncoder().encode('TU_PIN')).then(b=>console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+  return '7d12ba56e9f8b3dc64f77c87318c4f37bc12cfbf1a37573cdf3e4fa683f20155'; // PIN: ****
+})();
+
+async function hashPin(pin){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+  return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+function openPin(){
+  document.getElementById('p1').value='';
+  document.getElementById('p2').value='';
+  document.getElementById('p3').value='';
+  document.getElementById('p4').value='';
+  document.getElementById('pin-error').textContent='';
+  document.querySelectorAll('.pin-digit').forEach(d=>d.classList.remove('error'));
+  document.getElementById('pin-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('p1').focus(),100);
+}
+
+function closePin(){
+  document.getElementById('pin-modal').classList.remove('open');
+}
+
+function pinNext(el, nextId){
+  if(el.value.length===1 && nextId){
+    document.getElementById(nextId).focus();
+  }
+  if(!nextId && el.value.length===1){
+    // Último dígito introducido — auto-confirmar
+    setTimeout(checkPin, 200);
+  }
+}
+
+function pinKey(e, el, prevId){
+  if(e.key==='Backspace' && el.value==='' && prevId){
+    document.getElementById(prevId).focus();
+  }
+  if(e.key==='Enter') checkPin();
+}
+
+async function checkPin(){
+  const pin = ['p1','p2','p3','p4'].map(id=>document.getElementById(id).value).join('');
+  if(pin.length<4){
+    document.getElementById('pin-error').textContent='Introduce los 4 dígitos';
+    return;
+  }
+  const h = await hashPin(pin);
+  if(h === PIN_HASH){
+    closePin();
+    document.getElementById('file-input').click();
+  } else {
+    document.getElementById('pin-error').textContent='PIN incorrecto';
+    document.querySelectorAll('.pin-digit').forEach(d=>{
+      d.classList.add('error');
+      d.value='';
+    });
+    setTimeout(()=>{
+      document.querySelectorAll('.pin-digit').forEach(d=>d.classList.remove('error'));
+      document.getElementById('p1').focus();
+    },600);
+  }
+}
+
+// Cerrar modal al pulsar fuera
+document.getElementById('pin-modal').addEventListener('click',function(e){
+  if(e.target===this) closePin();
+});
+
 if('serviceWorker' in navigator){
   const sw=`
     const V='suples-chuc-v2';
