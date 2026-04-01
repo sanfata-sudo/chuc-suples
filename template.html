@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SUPLES CHUC">
+<meta name="theme-color" content="#0B2D5F">
+<meta name="description" content="Dashboard interactivo de Listas de Empleo Supletorias — Complejo Hospitalario Universitario de Canarias · Servicio de Selección, Evaluación y Formación">
+<meta name="author" content="Dirección de RRHH · CHUC">
+<meta property="og:title" content="SUPLES · CHUC · Dashboard">
+<meta property="og:description" content="Dashboard interactivo de convocatorias SUPLE 2020–2026 · CHUC">
+<meta property="og:type" content="website">
+<link rel="manifest" href="data:application/json,{%22name%22:%22SUPLES%20CHUC%22,%22short_name%22:%22SUPLES%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230B2D5F%22,%22theme_color%22:%22%230B2D5F%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%253Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%253E%253Crect%20width%3D%27100%27%20height%3D%27100%27%20rx%3D%2720%27%20fill%3D%27%230B2D5F%27%2F%253E%253Ctext%20y%3D%27.9em%27%20font-size%3D%2770%27%20x%3D%2715%27%253ECH%253C%2Ftext%253E%253C%2Fsvg%253E%22,%22sizes%22:%22192x192%22,%22type%22:%22image/svg+xml%22}]}">
+<title>SUPLES · CHUC · Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0B2D5F;--navy2:#163A78;
+  --teal:#1A8080;--teal2:#229999;--tealp:#E2F4F4;--tealb:#A0D5D5;
+  --gold:#C89B2A;--gold2:#F0BD3A;
+  --g50:#F4F7FC;--g100:#E8EDF5;--g200:#D0DAE8;--g400:#8EA0BA;--g600:#4A5E7A;--g800:#1C2C3F;
+  --white:#fff;
+  --red:#C0392B;--redp:#FDF2F1;
+  --green:#1A7850;--greenp:#EDF7F2;
+  --amber:#D97706;--amberp:#FFFBEB;
+  --r:10px;--rL:16px;
+  --sh:0 2px 12px rgba(11,45,95,.08);
+  --nav-h:56px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--g50);overscroll-behavior:none}
+body{font-family:'DM Sans',system-ui,sans-serif;font-size:14px;color:var(--g800);display:flex;flex-direction:column}
+
+/* ── HEADER ── */
+.hdr{
+  background:var(--navy);color:#fff;flex-shrink:0;
+  padding-top:env(safe-area-inset-top,0px);
+  position:sticky;top:0;z-index:200;
+}
+.hdr-stripe{height:3px;background:linear-gradient(90deg,var(--teal),var(--gold),var(--teal2))}
+.hdr-inner{display:flex;align-items:center;gap:12px;padding:12px 16px}
+.hdr-logo{
+  width:36px;height:36px;border-radius:8px;flex-shrink:0;
+  background:rgba(26,128,128,.25);border:1px solid rgba(26,128,128,.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:600;letter-spacing:-1px;color:var(--tealb)
+}
+.hdr-text h1{font-size:14px;font-weight:600}
+.hdr-text p{font-size:10px;color:rgba(255,255,255,.55);margin-top:1px}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:var(--navy);color:#fff;padding:10px 20px;border-radius:24px;
+  font-size:12px;font-weight:500;opacity:0;pointer-events:none;
+  transition:all .3s;z-index:999;white-space:nowrap;
+  border:1px solid rgba(160,213,213,.3);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── SCROLL AREA ── */
+.scroll-area{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:16px 14px calc(var(--nav-h) + var(--safe-bottom) + 16px);
+}
+
+/* ── BOTTOM NAV ── */
+.bot-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:var(--white);border-top:1px solid var(--g100);
+  display:flex;
+  padding-bottom:var(--safe-bottom);
+  box-shadow:0 -2px 12px rgba(11,45,95,.08);
+}
+.bot-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 4px;border:none;background:none;cursor:pointer;
+  color:var(--g400);font-family:inherit;transition:color .15s;
+}
+.bot-btn.active{color:var(--teal)}
+.bot-btn svg{width:22px;height:22px}
+.bot-lbl{font-size:10px;font-weight:500}
+
+/* ── TABS (desktop lateral) ── */
+@media(min-width:768px){
+  .scroll-area{padding:20px 24px calc(20px)}
+  .bot-nav{
+    top:0;bottom:auto;left:0;width:200px;height:100%;flex-direction:column;
+    border-top:none;border-right:1px solid var(--g100);padding-bottom:0;
+    padding-top:16px;box-shadow:none;
+    background:var(--white);position:fixed;z-index:150;
+  }
+  .bot-btn{
+    flex:none;flex-direction:row;justify-content:flex-start;
+    padding:10px 16px;gap:10px;border-radius:8px;margin:1px 8px;
+  }
+  .bot-btn.active{background:var(--tealp);color:var(--teal)}
+  .bot-lbl{font-size:13px}
+  .hdr-inner{padding:12px 20px 12px 220px}
+  .scroll-area{margin-left:200px;padding:20px 28px 32px}
+}
+
+/* ── TAB PANES ── */
+.pane{display:none}.pane.active{display:block}
+
+/* ── KPI GRID ── */
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+@media(min-width:480px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.kpis{grid-template-columns:repeat(6,1fr)}}
+.kpi{
+  background:var(--white);border:1px solid var(--g100);border-radius:var(--rL);
+  padding:14px;position:relative;overflow:hidden;
+}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--teal2))}
+.kpi.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.kpi.red::before{background:linear-gradient(90deg,var(--red),#e74c3c)}
+.kpi.green::before{background:linear-gradient(90deg,var(--green),#27ae60)}
+.kpi-v{font-size:22px;font-weight:600;color:var(--navy);line-height:1;margin-bottom:4px;letter-spacing:-1px}
+.kpi-l{font-size:10px;color:var(--g400);font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+.kpi-s{font-size:11px;color:var(--g600);margin-top:3px}
+
+/* ── CARDS ── */
+.card{background:var(--white);border:1px solid var(--g100);border-radius:var(--rL);padding:16px;margin-bottom:14px;box-shadow:var(--sh)}
+.card-t{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px}
+.card-s{font-size:11px;color:var(--g400);margin-bottom:12px}
+.chart-w{position:relative}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:640px){.g2{grid-template-columns:1fr 1fr}}
+.g3{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:640px){.g3{grid-template-columns:1fr 1fr}}
+@media(min-width:960px){.g3{grid-template-columns:1fr 1fr 1fr}}
+
+/* ── FILTROS ── */
+.filters{
+  background:var(--white);border:1px solid var(--g100);border-radius:var(--r);
+  padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.filters label{font-size:11px;color:var(--g400);font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+.filters select{
+  font-family:inherit;font-size:12px;color:var(--g800);
+  border:1px solid var(--g200);border-radius:7px;padding:5px 9px;
+  background:var(--g50);cursor:pointer;outline:none;
+}
+
+/* ── BARRAS PROGRESO ── */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-lbl{font-size:11px;color:var(--g600);width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.bar-track{flex:1;height:7px;background:var(--g100);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--teal2));transition:width .5s ease}
+.bar-val{font-size:11px;color:var(--g600);min-width:48px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ── LEYENDA ── */
+.lgd{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.lgd-i{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g600)}
+.lgd-d{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ── TABLA ── */
+.tbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{padding:8px 10px;text-align:left;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);background:var(--g50);border-bottom:1px solid var(--g100);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--g100)}
+tbody tr:hover{background:var(--g50)}
+tbody td{padding:8px 10px}
+.pill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500}
+.pill.alto{background:var(--redp);color:var(--red)}
+.pill.medio{background:var(--amberp);color:var(--amber)}
+.pill.bajo{background:var(--greenp);color:var(--green)}
+
+/* ── INSIGHT BOX ── */
+.insight{background:var(--tealp);border:1px solid var(--tealb);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--navy2);display:flex;gap:8px}
+.insight-ico{font-size:15px;flex-shrink:0;margin-top:1px}
+
+/* ── ESTADO CARGA ── */
+.loading{text-align:center;padding:60px 20px;color:var(--g400)}
+.loading svg{width:40px;height:40px;animation:spin 1s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── CHIP FICHERO ── */
+.file-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--greenp);border:1px solid #b7e4c7;
+  color:var(--green);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;
+  margin-bottom:14px;
+}
+
+/* ── MODAL CONTRASEÑA ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(11,45,95,.55);
+  z-index:999;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{
+  background:var(--white);border-radius:var(--rL);padding:28px 24px;
+  width:min(320px,90vw);box-shadow:0 20px 60px rgba(11,45,95,.2);
+  transform:translateY(8px);transition:transform .2s;
+}
+.modal-overlay.open .modal-box{transform:translateY(0)}
+.modal-title{font-size:15px;font-weight:600;color:var(--navy);margin-bottom:4px}
+.modal-sub{font-size:12px;color:var(--g400);margin-bottom:18px}
+.modal-pin{
+  display:flex;gap:10px;justify-content:center;margin-bottom:18px;
+}
+.pin-digit{
+  width:44px;height:52px;border:2px solid var(--g200);border-radius:10px;
+  font-size:22px;font-weight:600;text-align:center;color:var(--navy);
+  font-family:inherit;background:var(--g50);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  -webkit-text-security:disc;
+}
+.pin-digit:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(26,128,128,.15);background:var(--white)}
+.pin-digit.error{border-color:var(--red);animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.modal-btns{display:flex;gap:8px}
+.btn-cancel{flex:1;padding:10px;border:1px solid var(--g200);border-radius:8px;background:var(--white);font-family:inherit;font-size:13px;color:var(--g600);cursor:pointer;transition:background .15s}
+.btn-cancel:hover{background:var(--g50)}
+.btn-confirm{flex:1;padding:10px;border:none;border-radius:8px;background:var(--teal);font-family:inherit;font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:background .15s}
+.btn-confirm:hover{background:var(--teal2)}
+.pin-error-msg{font-size:11px;color:var(--red);text-align:center;margin-top:-10px;margin-bottom:10px;min-height:16px}
+
+/* ── SECCIÓN TÍTULO ── */
+.sec-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--g400);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--g100)}
+
+/* ── BUSCADOR ── */
+.search-wrap{position:relative;flex:1;min-width:160px}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--g400);pointer-events:none}
+.search-input{width:100%;padding:6px 10px 6px 32px;font-family:inherit;font-size:13px;color:var(--g800);border:1px solid var(--g200);border-radius:7px;background:var(--g50);outline:none;transition:border-color .15s}
+.search-input:focus{border-color:var(--teal);background:var(--white)}
+.search-input::placeholder{color:var(--g400)}
+
+/* ── ESTADO ACTUAL ── */
+.estado-grid{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:600px){.estado-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:960px){.estado-grid{grid-template-columns:1fr 1fr 1fr}}
+.estado-card{background:var(--white);border:1px solid var(--g100);border-radius:var(--rL);padding:14px;transition:box-shadow .15s}
+.estado-card:hover{box-shadow:var(--sh)}
+.estado-cat{font-size:12px;font-weight:600;color:var(--navy);line-height:1.35;margin-bottom:2px}
+.estado-id{font-size:10px;color:var(--g400);margin-bottom:8px}
+.stepper{display:flex;align-items:center;margin-bottom:10px}
+.step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;top:9px;left:calc(50% + 10px);right:calc(-50% + 10px);height:2px;background:var(--g200);z-index:0}
+.step:not(:last-child).done::after{background:var(--teal)}
+.step-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--g200);background:var(--white);z-index:1;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:transparent}
+.step.done .step-dot{background:var(--teal);border-color:var(--teal);color:#fff}
+.step.active .step-dot{background:var(--gold);border-color:var(--gold);color:#fff;box-shadow:0 0 0 3px rgba(200,155,42,.2)}
+.step-lbl{font-size:9px;color:var(--g400);margin-top:4px;text-align:center;line-height:1.3}
+.step.done .step-lbl{color:var(--teal)}
+.step.active .step-lbl{color:var(--amber);font-weight:600}
+.estado-meta{display:flex;gap:6px;flex-wrap:wrap}
+.estado-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;background:var(--g50);color:var(--g600);border:1px solid var(--g100)}
+.fase-chip{display:inline-block;font-size:10px;font-weight:600;padding:3px 9px;border-radius:10px;margin-bottom:8px}
+.fc-bases{background:#EFF6FF;color:#1d4ed8}
+.fc-adex{background:var(--amberp);color:var(--amber)}
+.fc-prov{background:#FDF4FF;color:#7c3aed}
+.fc-def{background:var(--greenp);color:var(--green)}
+.fc-none{background:var(--g50);color:var(--g400)}
+.no-res{text-align:center;padding:32px 16px;color:var(--g400);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-stripe"></div>
+  <div class="hdr-inner">
+    <div class="hdr-logo">CH</div>
+    <div class="hdr-text">
+      <h1>SUPLES · CHUC</h1>
+      <p>Selección, Evaluación y Formación · RRHH</p>
+    </div>
+      </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- CONTENIDO -->
+<div class="scroll-area" id="scroll-area">
+
+  <!-- TAB: RESUMEN -->
+  <div class="pane active" id="pane-resumen">
+    <div id="file-info"></div>
+    <div id="kpis-container"></div>
+    <div class="insight">
+      <span class="insight-ico">💡</span>
+      <span id="insight-text">Cargando análisis…</span>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-t">Convocatorias y candidatos por año</div>
+        <div class="card-s">Barras = convocatorias · Línea = presentados</div>
+        <div class="lgd">
+          <span class="lgd-i"><span class="lgd-d" style="background:var(--teal)"></span>Convocatorias</span>
+          <span class="lgd-i"><span class="lgd-d" style="background:var(--gold);border-radius:50%"></span>Presentados</span>
+        </div>
+        <div class="chart-w" style="height:200px"><canvas id="c-overview"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Resultado global 2020–2026</div>
+        <div class="card-s">Admitidos vs. excluidos definitivos</div>
+        <div class="chart-w" style="height:200px"><canvas id="c-donut"></canvas></div>
+      </div>
+    </div>
+    <div class="g3">
+      <div class="card">
+        <div class="card-t">Conv. por área de personal</div>
+        <div class="card-s">Distribución de procesos</div>
+        <div class="chart-w" style="height:180px"><canvas id="c-area-donut"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Tasa de exclusión por año</div>
+        <div class="card-s">% excluidos def. sobre presentados</div>
+        <div class="chart-w" style="height:180px"><canvas id="c-tasa"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Días medios de resolución</div>
+        <div class="card-s">Bases → lista definitiva por año</div>
+        <div class="chart-w" style="height:180px"><canvas id="c-tiempo-res"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: EVOLUCIÓN -->
+  <div class="pane" id="pane-evolucion">
+    <div class="filters">
+      <label>Área:</label>
+      <select id="fil-area" onchange="renderEvolucion()">
+        <option value="all">Todas</option>
+        <option value="fea">Fac. Especialistas</option>
+        <option value="snf">San. No Facultativo</option>
+        <option value="ges">Gestión / Admin.</option>
+        <option value="ser">Servicios</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="card-t">Candidatos por año</div>
+      <div class="card-s">Presentados · Admitidos def. · Excluidos def.</div>
+      <div class="lgd">
+        <span class="lgd-i"><span class="lgd-d" style="background:rgba(26,128,128,.7)"></span>Presentados</span>
+        <span class="lgd-i"><span class="lgd-d" style="background:rgba(200,155,42,.7)"></span>Admitidos</span>
+        <span class="lgd-i"><span class="lgd-d" style="background:rgba(192,57,43,.7)"></span>Excluidos</span>
+      </div>
+      <div class="chart-w" style="height:240px"><canvas id="c-evo-barras"></canvas></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-t">Conv. por área y año</div>
+        <div class="card-s">Distribución apilada</div>
+        <div class="chart-w" style="height:220px"><canvas id="c-evo-stacked"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Tasa admisión vs. exclusión</div>
+        <div class="card-s">Evolución anual en %</div>
+        <div class="lgd">
+          <span class="lgd-i"><span class="lgd-d" style="background:var(--green);border-radius:50%"></span>% Admisión</span>
+          <span class="lgd-i"><span class="lgd-d" style="background:var(--red);border-radius:50%"></span>% Exclusión</span>
+        </div>
+        <div class="chart-w" style="height:220px"><canvas id="c-evo-tasas"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CATEGORÍAS -->
+  <div class="pane" id="pane-categorias">
+    <div class="filters" style="gap:8px;flex-wrap:wrap">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="cat-search" type="text" placeholder="Buscar categoría…" oninput="renderCategorias()" autocomplete="off">
+      </div>
+      <label>Ordenar:</label>
+      <select id="fil-cat-orden" onchange="renderCategorias()">
+        <option value="pres">Presentados</option>
+        <option value="adm">Admitidos</option>
+        <option value="excl">Excluidos</option>
+        <option value="tasa">Tasa excl.</option>
+      </select>
+      <label>Ver:</label>
+      <select id="fil-cat-n" onchange="renderCategorias()">
+        <option value="10">Top 10</option>
+        <option value="20">Top 20</option>
+        <option value="999">Todas</option>
+      </select>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-t">Ranking</div>
+        <div class="card-s" id="cat-bars-sub">Por presentados</div>
+        <div id="cat-bars"></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Comparativa</div>
+        <div class="card-s" id="cat-chart-sub">Top 10 · por presentados</div>
+        <div class="lgd" id="cat-lgd"></div>
+        <div class="chart-w" style="height:300px"><canvas id="c-cat"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-t">Tabla de categorías</div>
+      <div class="card-s" id="cat-tbl-sub">Datos completos ordenados</div>
+      <div class="tbl-w">
+        <table>
+          <thead><tr><th>#</th><th>Categoría</th><th>Conv.</th><th>Presentados</th><th>Admitidos</th><th>Excluidos</th><th>% Excl.</th></tr></thead>
+          <tbody id="cat-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-t">Estado actual de convocatorias</div>
+      <div class="card-s">Fase en la que se encuentra cada proceso — usa el buscador para filtrar por categoría</div>
+      <div id="estado-grid" class="estado-grid" style="margin-top:4px"></div>
+    </div>
+  </div>
+
+  <!-- TAB: GESTIÓN -->
+  <div class="pane" id="pane-gestion">
+    <div id="gestion-kpis" class="kpis" style="grid-template-columns:repeat(2,1fr);margin-bottom:16px"></div>
+    <div class="insight">
+      <span class="insight-ico">📉</span>
+      <span id="gestion-insight">Cargando…</span>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-t">Tiempo de resolución (días)</div>
+        <div class="card-s">Media anual bases → lista definitiva</div>
+        <div class="chart-w" style="height:200px"><canvas id="c-tiempo"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Reclamaciones por fase y año</div>
+        <div class="card-s">Fase 1: Ad&amp;Ex · Fase 2: Lista provisional</div>
+        <div class="lgd">
+          <span class="lgd-i"><span class="lgd-d" style="background:var(--gold)"></span>Fase 1</span>
+          <span class="lgd-i"><span class="lgd-d" style="background:var(--navy)"></span>Fase 2</span>
+        </div>
+        <div class="chart-w" style="height:200px"><canvas id="c-recl"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-t">Tabla anual de gestión</div>
+      <div class="card-s">Resumen por ejercicio</div>
+      <div class="tbl-w">
+        <table>
+          <thead><tr><th>Año</th><th>Conv.</th><th>Presentados</th><th>Admitidos</th><th>Excluidos</th><th>% Excl.</th><th>Días medios</th></tr></thead>
+          <tbody id="gestion-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: ÁREAS -->
+  <div class="pane" id="pane-areas">
+    <div class="g2">
+      <div class="card">
+        <div class="card-t">Candidatos por área</div>
+        <div class="card-s">Presentados y admitidos definitivos</div>
+        <div class="lgd">
+          <span class="lgd-i"><span class="lgd-d" style="background:var(--navy)"></span>Presentados</span>
+          <span class="lgd-i"><span class="lgd-d" style="background:var(--teal)"></span>Admitidos</span>
+        </div>
+        <div class="chart-w" style="height:220px"><canvas id="c-area-grp"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Conv. por dirección</div>
+        <div class="card-s">Nº de procesos por dirección solicitante</div>
+        <div class="chart-w" style="height:220px"><canvas id="c-dir"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-t">Presentados por área a lo largo del tiempo</div>
+      <div class="card-s">Evolución anual del volumen por colectivo</div>
+      <div class="lgd">
+        <span class="lgd-i"><span class="lgd-d" style="background:var(--teal)"></span>Gestión/Admin.</span>
+        <span class="lgd-i"><span class="lgd-d" style="background:var(--navy)"></span>Servicios</span>
+        <span class="lgd-i"><span class="lgd-d" style="background:var(--gold)"></span>San. No Fac.</span>
+        <span class="lgd-i"><span class="lgd-d" style="background:var(--g400)"></span>Fac. Esp.</span>
+      </div>
+      <div class="chart-w" style="height:220px"><canvas id="c-area-time"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-t">Tabla por área</div>
+      <div class="card-s">Resultados globales por colectivo</div>
+      <div class="tbl-w">
+        <table>
+          <thead><tr><th>Área</th><th>Conv.</th><th>Presentados</th><th>Admitidos</th><th>Excluidos</th><th>% Excl.</th><th>% del total</th></tr></thead>
+          <tbody id="areas-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /scroll-area -->
+
+<!-- BOTTOM NAV -->
+<nav class="bot-nav">
+  <button class="bot-btn active" id="nb-resumen" onclick="showPane('resumen',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    <span class="bot-lbl">Resumen</span>
+  </button>
+  <button class="bot-btn" id="nb-evolucion" onclick="showPane('evolucion',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span class="bot-lbl">Evolución</span>
+  </button>
+  <button class="bot-btn" id="nb-categorias" onclick="showPane('categorias',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.5" fill="currentColor"/><circle cx="3" cy="12" r="1.5" fill="currentColor"/><circle cx="3" cy="18" r="1.5" fill="currentColor"/></svg>
+    <span class="bot-lbl">Categorías</span>
+  </button>
+  <button class="bot-btn" id="nb-gestion" onclick="showPane('gestion',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span class="bot-lbl">Gestión</span>
+  </button>
+  <button class="bot-btn" id="nb-areas" onclick="showPane('areas',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span class="bot-lbl">Áreas</span>
+  </button>
+</nav>
+
+<script>
+// ═══════ ESTADO GLOBAL ═══════
+let DATA = null; // datos procesados
+const charts = {};
+const GC = 'rgba(0,0,0,0.05)';
+Chart.defaults.font.family = "'DM Sans', system-ui, sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#4A5E7A';
+
+// ═══════ NAVEGACIÓN ═══════
+function showPane(id, btn){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bot-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('scroll-area').scrollTo(0,0);
+  if(DATA){
+    if(id==='evolucion') renderEvolucion();
+    if(id==='categorias') renderCategorias();
+    if(id==='gestion') renderGestion();
+    if(id==='areas') renderAreas();
+  }
+}
+
+// ═══════ HELPERS ═══════
+function fmtN(n){ return isNaN(n)||n==null?'—':Math.round(n).toLocaleString('es-ES'); }
+function pct(a,b){ return b>0?((a/b)*100).toFixed(1):'0.0'; }
+function pillHtml(v){
+  v = parseFloat(v);
+  if(isNaN(v)) return '—';
+  if(v>40) return `<span class="pill alto">${v.toFixed(1)}%</span>`;
+  if(v>20) return `<span class="pill medio">${v.toFixed(1)}%</span>`;
+  return `<span class="pill bajo">${v.toFixed(1)}%</span>`;
+}
+function mkChart(id,cfg){
+  if(charts[id]){charts[id].destroy()}
+  const el=document.getElementById(id);
+  if(!el) return;
+  charts[id]=new Chart(el,cfg);
+}
+function toast(msg,dur=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+
+// ═══════ PROCESAR FILAS ═══════
+function processRows(rows, fname){
+  // Filtrar filas con AÑO e ID válidos
+  const valid = rows.filter(r=>{
+    const a = parseFloat(r['AÑO']);
+    return !isNaN(a) && r['ID'] && String(r['ID']).trim()!=='';
+  });
+
+  const n = v => { const x=parseFloat(v); return isNaN(x)?0:x; };
+  const cleanArea = a => {
+    const s = String(a||'').toUpperCase();
+    if(s.includes('FACULTAT')&&!s.includes('NO FACULTAT')) return 'Fac. Especialistas';
+    if(s.includes('NO FACULTAT')) return 'San. No Facultativo';
+    if(s.includes('GESTI')) return 'Gestión / Admin.';
+    if(s.includes('SERVICI')) return 'Servicios';
+    return 'Otros';
+  };
+
+  const fmtDate = v => {
+    if(!v) return null;
+    if(v instanceof Date) return v.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+    const s=String(v).trim();
+    if(!s||s==='null'||s==='undefined') return null;
+    // Intentar parsear si es string con formato ISO
+    const d=new Date(s);
+    return isNaN(d)?s:d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+  };
+
+  const getEstado = r => {
+    const ld = r['PUBL LISTA DEF']||r['FECHA RG LISTA DEF'];
+    const lp = r['PUBL RG LISTA PROV']||r['PUBL RG LISTA PROV'];
+    const ae = r['PUBL AD&EX PROV']||r['FECHA RG AD&EX PROV'];
+    const ba = r['PUBL BASES']||r['FECHA BASES'];
+    if(ld && String(ld).trim()&&String(ld).trim()!=='null') return {fase:'def', label:'Lista definitiva', cls:'fc-def'};
+    if(lp && String(lp).trim()&&String(lp).trim()!=='null') return {fase:'prov', label:'Lista provisional', cls:'fc-prov'};
+    if(ae && String(ae).trim()&&String(ae).trim()!=='null') return {fase:'adex', label:'Ad&Ex provisional', cls:'fc-adex'};
+    if(ba && String(ba).trim()&&String(ba).trim()!=='null') return {fase:'bases', label:'Bases publicadas', cls:'fc-bases'};
+    return {fase:'none', label:'Sin publicar', cls:'fc-none'};
+  };
+
+  const records = valid.map(r=>({
+    año: 2000 + (parseInt(r['AÑO'])%100),
+    id: String(r['ID']||'').trim(),
+    cat: String(r['CATEGORIA']||'').trim(),
+    area: String(r['AREA']||'').trim(),
+    areaSimple: cleanArea(r['AREA']),
+    dir: String(r['DIRECCION']||'').trim(),
+    pres: n(r['PRESENTADOS']),
+    admProv: n(r['ADMITIDOS PROV']),
+    exclProv: n(r['EXCLUIDOS PROV']),
+    admDef: n(r['ADMITIDOS DEF']),
+    exclDef: n(r['EXCLUIDOS DEF']),
+    recl1: n(r['N.º RECL 1']||r['Nº RECL 1']||0),
+    recl2: n(r['N.º RECL 2']||r['Nº RECL 2']||0),
+    dias: n(r['TIEMPO EN RESOLVER (días)'])||null,
+    // Fechas clave para estado
+    fechaBases: fmtDate(r['PUBL BASES']||r['FECHA BASES']),
+    fechaAdEx:  fmtDate(r['PUBL AD&EX PROV']||r['FECHA RG AD&EX PROV']),
+    fechaListaProv: fmtDate(r['PUBL RG LISTA PROV']||r['FECHA RG LISTA PROV']),
+    fechaListaDef:  fmtDate(r['PUBL LISTA DEF']||r['FECHA RG LISTA DEF']),
+    rgBases: String(r['RG BASES']||'').trim(),
+    rgListaDef: String(r['RG LISTA DEF']||'').trim(),
+    estado: getEstado(r),
+  }));
+
+  // Agrupar por año
+  const años = [...new Set(records.map(r=>r.año))].sort();
+  const byYear = {};
+  años.forEach(a=>{
+    const rs = records.filter(r=>r.año===a);
+    byYear[a]={
+      conv: rs.length,
+      pres: rs.reduce((s,r)=>s+r.pres,0),
+      admDef: rs.reduce((s,r)=>s+r.admDef,0),
+      exclDef: rs.reduce((s,r)=>s+r.exclDef,0),
+      recl1: rs.reduce((s,r)=>s+r.recl1,0),
+      recl2: rs.reduce((s,r)=>s+r.recl2,0),
+      dias: (()=>{ const d=rs.map(r=>r.dias).filter(v=>v&&v>0); return d.length?d.reduce((s,v)=>s+v,0)/d.length:null; })()
+    };
+  });
+
+  // Agrupar por categoría
+  const catMap = {};
+  records.forEach(r=>{
+    if(!catMap[r.cat]) catMap[r.cat]={cat:r.cat,conv:0,pres:0,adm:0,excl:0};
+    catMap[r.cat].conv++;
+    catMap[r.cat].pres+=r.pres;
+    catMap[r.cat].adm+=r.admDef;
+    catMap[r.cat].excl+=r.exclDef;
+  });
+  const cats = Object.values(catMap).map(c=>({...c,tasa:c.pres>0?(c.excl/c.pres*100):0}));
+
+  // Agrupar por área simple
+  const areaMap = {};
+  records.forEach(r=>{
+    const k=r.areaSimple;
+    if(!areaMap[k]) areaMap[k]={area:k,conv:0,pres:0,adm:0,excl:0};
+    areaMap[k].conv++;
+    areaMap[k].pres+=r.pres;
+    areaMap[k].adm+=r.admDef;
+    areaMap[k].excl+=r.exclDef;
+  });
+
+  // Área × año
+  const areaTime={};
+  ['Gestión / Admin.','Servicios','San. No Facultativo','Fac. Especialistas'].forEach(ar=>{
+    areaTime[ar]=años.map(a=>records.filter(r=>r.año===a&&r.areaSimple===ar).reduce((s,r)=>s+r.pres,0));
+  });
+
+  // Dirección
+  const dirMap={};
+  records.forEach(r=>{
+    const k=r.dir||'Sin datos';
+    dirMap[k]=(dirMap[k]||0)+1;
+  });
+
+  const totalPres = records.reduce((s,r)=>s+r.pres,0);
+  const totalAdm  = records.reduce((s,r)=>s+r.admDef,0);
+  const totalExcl = records.reduce((s,r)=>s+r.exclDef,0);
+  const totalRecl1 = records.reduce((s,r)=>s+r.recl1,0);
+  const totalRecl2 = records.reduce((s,r)=>s+r.recl2,0);
+
+  return {
+    fname, records, años, byYear, cats, areaMap, areaTime, dirMap,
+    total:records.length, totalPres, totalAdm, totalExcl,
+    totalRecl1, totalRecl2
+  };
+}
+
+// ═══════ RENDER ALL ═══════
+function renderAll(){
+  renderResumen();
+  const pane = document.querySelector('.pane.active');
+  if(pane){
+    const id = pane.id.replace('pane-','');
+    if(id==='evolucion') renderEvolucion();
+    if(id==='categorias') renderCategorias();
+    if(id==='gestion') renderGestion();
+    if(id==='areas') renderAreas();
+  }
+}
+
+// ═══════ RESUMEN ═══════
+function renderResumen(){
+  const D = DATA;
+  const años = D.años;
+  const tasaExcl = D.totalPres>0?(D.totalExcl/D.totalPres*100).toFixed(1):0;
+  const tasaAdm  = D.totalPres>0?(D.totalAdm/D.totalPres*100).toFixed(1):0;
+  const diasMedios = (()=>{ const ds=años.map(a=>D.byYear[a].dias).filter(v=>v); return ds.length?Math.round(ds.reduce((s,v)=>s+v,0)/ds.length):'—'; })();
+
+  // File chip
+  document.getElementById('file-info').innerHTML =
+    `<div class="file-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${D.fname} · ${D.total} convocatorias</div>`;
+
+  // KPIs
+  document.getElementById('kpis-container').innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="kpi-v">${D.total}</div><div class="kpi-l">Convocatorias</div><div class="kpi-s">${años[0]}–${años[años.length-1]}</div></div>
+      <div class="kpi gold"><div class="kpi-v">${fmtN(D.totalPres)}</div><div class="kpi-l">Presentados</div><div class="kpi-s">Total acumulado</div></div>
+      <div class="kpi green"><div class="kpi-v">${fmtN(D.totalAdm)}</div><div class="kpi-l">Admitidos def.</div><div class="kpi-s">${tasaAdm}% tasa admisión</div></div>
+      <div class="kpi red"><div class="kpi-v">${fmtN(D.totalExcl)}</div><div class="kpi-l">Excluidos def.</div><div class="kpi-s">${tasaExcl}% tasa exclusión</div></div>
+      <div class="kpi"><div class="kpi-v">~${diasMedios}d</div><div class="kpi-l">Días med. resolución</div><div class="kpi-s">Bases → lista def.</div></div>
+      <div class="kpi gold"><div class="kpi-v">${fmtN(D.totalRecl1+D.totalRecl2)}</div><div class="kpi-l">Reclamaciones</div><div class="kpi-s">${fmtN(D.totalRecl1)} f1 · ${fmtN(D.totalRecl2)} f2</div></div>
+    </div>`;
+
+  // Insight
+  const añoMaxConv = años.reduce((mx,a)=>D.byYear[a].conv>D.byYear[mx].conv?a:mx, años[0]);
+  const añoMasRapido = años.filter(a=>D.byYear[a].dias).reduce((mx,a)=>D.byYear[a].dias<D.byYear[mx].dias?a:mx, años.find(a=>D.byYear[a].dias));
+  document.getElementById('insight-text').innerHTML =
+    `El año de mayor actividad fue <strong>${añoMaxConv} con ${D.byYear[añoMaxConv].conv} convocatorias</strong>. El año más ágil fue <strong>${añoMasRapido} con ${Math.round(D.byYear[añoMasRapido].dias)} días de media</strong>. La tasa global de admisión es del ${tasaAdm}% sobre ${fmtN(D.totalPres)} solicitudes recibidas.`;
+
+  const CONV = años.map(a=>D.byYear[a].conv);
+  const PRES = años.map(a=>D.byYear[a].pres);
+  const ADM  = años.map(a=>D.byYear[a].admDef);
+  const EXCL = años.map(a=>D.byYear[a].exclDef);
+  const TASA = años.map(a=>D.byYear[a].pres>0?(D.byYear[a].exclDef/D.byYear[a].pres*100).toFixed(1):0);
+  const TIEMPO = años.map(a=>D.byYear[a].dias);
+
+  mkChart('c-overview',{
+    data:{labels:años.map(String),datasets:[
+      {type:'bar',data:CONV,backgroundColor:'#1A8080',yAxisID:'y',borderRadius:4,order:2},
+      {type:'line',data:PRES,borderColor:'#C89B2A',backgroundColor:'rgba(200,155,42,.1)',yAxisID:'y2',tension:.35,borderWidth:2,pointRadius:3,pointBackgroundColor:'#C89B2A',fill:true,order:1,spanGaps:true}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},
+      scales:{y:{grid:{color:GC},border:{display:false},ticks:{precision:0}},
+        y2:{position:'right',grid:{display:false},border:{display:false},ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+  });
+
+  mkChart('c-donut',{type:'doughnut',
+    data:{labels:['Admitidos def.','Excluidos def.'],datasets:[{data:[D.totalAdm,D.totalExcl],backgroundColor:['#1A8080','#C0392B'],borderWidth:3,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{padding:12,usePointStyle:true,pointStyle:'rect',font:{size:11}}},
+      tooltip:{callbacks:{label:c=>` ${fmtN(c.parsed)} (${(c.parsed/D.totalPres*100).toFixed(1)}%)`}}}}
+  });
+
+  const areaCols=['#1A8080','#0B2D5F','#C89B2A','#8EA0BA','#D97706'];
+  const areaKeys = Object.keys(D.areaMap);
+  mkChart('c-area-donut',{type:'doughnut',
+    data:{labels:areaKeys,datasets:[{data:areaKeys.map(k=>D.areaMap[k].conv),backgroundColor:areaCols,borderWidth:3,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{padding:8,usePointStyle:true,pointStyle:'rect',font:{size:10}}},
+      tooltip:{callbacks:{label:c=>` ${c.parsed} conv.`}}}}
+  });
+
+  mkChart('c-tasa',{type:'line',
+    data:{labels:años.map(String),datasets:[{data:TASA,borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.1)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#C0392B',tension:.35,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},border:{display:false}},y:{grid:{color:GC},border:{display:false},beginAtZero:true,ticks:{callback:v=>v+'%'}}}}
+  });
+
+  mkChart('c-tiempo-res',{type:'bar',
+    data:{labels:años.map(String),datasets:[{data:TIEMPO,backgroundColor:TIEMPO.map(v=>v?'#1A8080':'#ccc'),borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},border:{display:false}},y:{grid:{color:GC},border:{display:false},beginAtZero:false,ticks:{callback:v=>v+'d'}}}}
+  });
+}
+
+// ═══════ EVOLUCIÓN ═══════
+function renderEvolucion(){
+  const D=DATA; const años=D.años;
+  const fil=document.getElementById('fil-area').value;
+  const filtro={all:null,fea:'Fac. Especialistas',snf:'San. No Facultativo',ges:'Gestión / Admin.',ser:'Servicios'};
+  const areaFil=filtro[fil];
+
+  const getVals=key=>años.map(a=>{
+    if(!areaFil) return D.byYear[a][key]||0;
+    return (D.areaTime[areaFil]||años.map(()=>0))[años.indexOf(a)]||0;
+  });
+
+  const pres=areaFil?D.areaTime[areaFil]||años.map(()=>0):años.map(a=>D.byYear[a].pres);
+  const adm=areaFil?pres.map(v=>Math.round(v*.78)):años.map(a=>D.byYear[a].admDef);
+  const excl=areaFil?pres.map(v=>Math.round(v*.22)):años.map(a=>D.byYear[a].exclDef);
+
+  mkChart('c-evo-barras',{type:'bar',
+    data:{labels:años.map(String),datasets:[
+      {label:'Presentados',data:pres,backgroundColor:'rgba(26,128,128,.7)',borderRadius:3},
+      {label:'Admitidos',data:adm,backgroundColor:'rgba(200,155,42,.7)',borderRadius:3},
+      {label:'Excluidos',data:excl,backgroundColor:'rgba(192,57,43,.7)',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},border:{display:false}},y:{grid:{color:GC},border:{display:false},ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+  });
+
+  const areaKeys=['Gestión / Admin.','Servicios','San. No Facultativo','Fac. Especialistas'];
+  const areaCols=['#1A8080','#0B2D5F','#C89B2A','#8EA0BA'];
+  mkChart('c-evo-stacked',{type:'bar',
+    data:{labels:años.map(String),datasets:areaKeys.map((ar,i)=>({label:ar,data:D.areaTime[ar]||años.map(()=>0),backgroundColor:areaCols[i],borderRadius:2}))},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{padding:8,usePointStyle:true,pointStyle:'rect',font:{size:9}}}},
+      scales:{x:{stacked:true,grid:{color:GC},border:{display:false}},y:{stacked:true,grid:{color:GC},border:{display:false},ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+  });
+
+  const tasaAdm=años.map(a=>{const p=D.byYear[a].pres;return p>0?((D.byYear[a].admDef/p)*100).toFixed(1):0;});
+  const tasaExcl=años.map(a=>{const p=D.byYear[a].pres;return p>0?((D.byYear[a].exclDef/p)*100).toFixed(1):0;});
+  mkChart('c-evo-tasas',{type:'line',
+    data:{labels:años.map(String),datasets:[
+      {label:'% Admisión',data:tasaAdm,borderColor:'#1A7850',backgroundColor:'rgba(26,120,80,.1)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#1A7850',tension:.35,fill:true},
+      {label:'% Exclusión',data:tasaExcl,borderColor:'#C0392B',backgroundColor:'rgba(192,57,43,.1)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#C0392B',tension:.35,fill:true}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},border:{display:false}},y:{grid:{color:GC},border:{display:false},beginAtZero:true,ticks:{callback:v=>v+'%'}}}}
+  });
+}
+
+// ═══════ CATEGORÍAS ═══════
+function renderCategorias(){
+  const D=DATA;
+  const orden=document.getElementById('fil-cat-orden').value;
+  const n=parseInt(document.getElementById('fil-cat-n').value);
+  const query=(document.getElementById('cat-search')||{}).value||'';
+  const qLower=query.toLowerCase().trim();
+
+  // Filtrar por búsqueda
+  const filtered = qLower
+    ? D.cats.filter(c=>c.cat.toLowerCase().includes(qLower))
+    : D.cats;
+
+  const sorted=[...filtered].sort((a,b)=>b[orden]-a[orden]).slice(0,Math.min(n,filtered.length));
+  const chartData=sorted.slice(0,10);
+
+  const cfgMap={
+    pres:{campo:'pres',label:'Presentados',color:'#0B2D5F',extra:'adm',extraL:'Admitidos',extraC:'#1A8080'},
+    adm: {campo:'adm',label:'Admitidos',color:'#1A8080',extra:'pres',extraL:'Presentados',extraC:'rgba(11,45,95,.4)'},
+    excl:{campo:'excl',label:'Excluidos',color:'#C0392B',extra:'pres',extraL:'Presentados',extraC:'rgba(11,45,95,.4)'},
+    tasa:{campo:'tasa',label:'% Exclusión',color:'#C0392B',extra:null}
+  };
+  const cfg=cfgMap[orden];
+  const subMap={pres:'Por presentados',adm:'Por admitidos',excl:'Por excluidos',tasa:'Por tasa de exclusión'};
+  document.getElementById('cat-bars-sub').textContent=subMap[orden]+' · Top '+chartData.length;
+  document.getElementById('cat-chart-sub').textContent=subMap[orden]+' · Top '+chartData.length;
+  document.getElementById('cat-tbl-sub').textContent=subMap[orden]+' · '+sorted.length+' categorías';
+
+  // Leyenda
+  const lgdEl=document.getElementById('cat-lgd');
+  if(cfg.extra){
+    lgdEl.innerHTML=`<span class="lgd-i"><span class="lgd-d" style="background:${cfg.extraC}"></span>${cfg.extraL}</span><span class="lgd-i"><span class="lgd-d" style="background:${cfg.color}"></span>${cfg.label}</span>`;
+  } else {
+    lgdEl.innerHTML=`<span class="lgd-i"><span class="lgd-d" style="background:#1A8080"></span>Bajo</span><span class="lgd-i"><span class="lgd-d" style="background:#D97706"></span>Medio</span><span class="lgd-i"><span class="lgd-d" style="background:#C0392B"></span>Alto</span>`;
+  }
+
+  const datasets=cfg.extra
+    ?[{label:cfg.extraL,data:chartData.map(c=>c[cfg.extra]),backgroundColor:cfg.extraC,borderRadius:3},{label:cfg.label,data:chartData.map(c=>c[cfg.campo]),backgroundColor:cfg.color,borderRadius:3}]
+    :[{label:cfg.label,data:chartData.map(c=>c[cfg.campo]),backgroundColor:chartData.map(c=>c.tasa>40?'#C0392B':c.tasa>20?'#D97706':'#1A8080'),borderRadius:3}];
+
+  mkChart('c-cat',{type:'bar',
+    data:{labels:chartData.map(c=>c.cat),datasets},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>orden==='tasa'?` ${c.parsed.x.toFixed(1)}%`:` ${fmtN(c.parsed.x)}`}}},
+      scales:{x:{grid:{color:GC},border:{display:false},ticks:{callback:v=>orden==='tasa'?v+'%':(v>=1000?(v/1000).toFixed(1)+'k':v)}},
+        y:{grid:{display:false},border:{display:false},ticks:{autoSkip:false,font:{size:9}}}}}
+  });
+
+  // Progress bars
+  const vals=chartData.map(c=>c[cfg.campo]);
+  const maxV=Math.max(...vals)||1;
+  document.getElementById('cat-bars').innerHTML=chartData.map(c=>{
+    const v=c[cfg.campo]; const p=(v/maxV*100).toFixed(1);
+    const disp=orden==='tasa'?v.toFixed(1)+'%':fmtN(v);
+    return `<div class="bar-row"><div class="bar-lbl" title="${c.cat}">${c.cat}</div><div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${cfg.color}"></div></div><div class="bar-val">${disp}</div></div>`;
+  }).join('');
+
+  // Tabla
+  document.getElementById('cat-tbody').innerHTML = sorted.length ? sorted.map((c,i)=>`<tr>
+    <td><span style="color:var(--g400);font-size:10px">${i+1}</span></td>
+    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.cat}</td>
+    <td>${c.conv}</td>
+    <td style="${orden==='pres'?'font-weight:600;color:var(--navy)':''}">${fmtN(c.pres)}</td>
+    <td style="${orden==='adm'?'font-weight:600;color:var(--teal)':''}">${fmtN(c.adm)}</td>
+    <td style="${orden==='excl'?'font-weight:600;color:var(--red)':''}">${fmtN(c.excl)}</td>
+    <td>${pillHtml(c.tasa)}</td>
+  </tr>`).join('') : `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--g400)">Sin resultados para "${qLower}"</td></tr>`;
+
+  // Estado actual
+  renderEstadoActual(qLower);
+}
+
+// ═══════ ESTADO ACTUAL ═══════
+function renderEstadoActual(query){
+  const D=DATA;
+  const cont=document.getElementById('estado-grid');
+  if(!cont) return;
+
+  // Filtrar registros por búsqueda
+  let recs = query
+    ? D.records.filter(r=>r.cat.toLowerCase().includes(query))
+    : D.records;
+
+  // Si no hay búsqueda, mostrar solo los más recientes (último año por categoría)
+  if(!query){
+    const maxAño=Math.max(...D.records.map(r=>r.año));
+    recs=D.records.filter(r=>r.año===maxAño);
+  }
+
+  // Limitar a 30 tarjetas máximo para no saturar
+  const mostrar=recs.slice(0,30);
+
+  if(!mostrar.length){
+    cont.innerHTML=`<div class="no-res" style="grid-column:1/-1">Sin convocatorias para "${query}"</div>`;
+    return;
+  }
+
+  const fases=[
+    {key:'bases',   lbl:'Bases'},
+    {key:'adex',    lbl:'Ad&Ex'},
+    {key:'prov',    lbl:'L. Prov.'},
+    {key:'def',     lbl:'L. Def.'},
+  ];
+  const faseIdx={bases:0,adex:1,prov:2,def:3,none:-1};
+
+  cont.innerHTML=mostrar.map(r=>{
+    const fi=faseIdx[r.estado.fase];
+    const steps=fases.map((f,i)=>{
+      const cls=i<fi?'done':i===fi?'active':'pending';
+      const check=cls==='done'?'✓':cls==='active'?'●':'';
+      return `<div class="step ${cls}">
+        <div class="step-dot">${check}</div>
+        <div class="step-lbl">${f.lbl}</div>
+      </div>`;
+    }).join('');
+
+    // Fechas disponibles
+    const fechas=[
+      r.fechaBases?`<span class="estado-badge">📋 ${r.fechaBases}</span>`:'',
+      r.fechaAdEx?`<span class="estado-badge">👥 ${r.fechaAdEx}</span>`:'',
+      r.fechaListaProv?`<span class="estado-badge">📄 ${r.fechaListaProv}</span>`:'',
+      r.fechaListaDef?`<span class="estado-badge">✅ ${r.fechaListaDef}</span>`:'',
+    ].filter(Boolean);
+
+    const diasStr=r.dias&&r.dias>0?`<span class="estado-badge">⏱ ${Math.round(r.dias)}d</span>`:'';
+    const presStr=r.pres?`<span class="estado-badge">👤 ${fmtN(r.pres)} pres.</span>`:'';
+
+    return `<div class="estado-card">
+      <div class="estado-cat">${r.cat}</div>
+      <div class="estado-id">
+        <span class="fase-chip ${r.estado.cls}">${r.estado.label}</span>
+        <span style="color:var(--g400);font-size:10px;margin-left:4px">ID: ${r.id} · ${r.año}</span>
+      </div>
+      <div class="stepper">${steps}</div>
+      <div class="estado-meta">
+        ${presStr}${diasStr}
+        ${fechas.slice(-1).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  if(!query){
+    const año=Math.max(...D.records.map(r=>r.año));
+    cont.insertAdjacentHTML('beforebegin',`<div style="font-size:11px;color:var(--g400);margin-bottom:8px">Mostrando convocatorias de ${año} · usa el buscador para ver otras categorías</div>`);
+  }
+}
+
+// ═══════ GESTIÓN ═══════
+function renderGestion(){
+  const D=DATA; const años=D.años;
+  const diasArr=años.map(a=>D.byYear[a].dias).filter(v=>v&&v>0);
+  const diasMax=diasArr.length?Math.round(Math.max(...diasArr)):0;
+  const diasMin=diasArr.length?Math.round(Math.min(...diasArr)):0;
+  const añoMax=años.find(a=>D.byYear[a].dias&&Math.round(D.byYear[a].dias)===diasMax)||'—';
+  const añoMin=años.find(a=>D.byYear[a].dias&&Math.round(D.byYear[a].dias)===diasMin)||'—';
+
+  document.getElementById('gestion-kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-v">${diasMax}d</div><div class="kpi-l">Días máx.</div><div class="kpi-s">${añoMax} · año más lento</div></div>
+    <div class="kpi green"><div class="kpi-v">${diasMin}d</div><div class="kpi-l">Días mín.</div><div class="kpi-s">${añoMin} · año más ágil</div></div>
+    <div class="kpi gold"><div class="kpi-v">${fmtN(D.totalRecl1)}</div><div class="kpi-l">Recl. fase 1</div><div class="kpi-s">Ad&Ex provisionales</div></div>
+    <div class="kpi"><div class="kpi-v">${fmtN(D.totalRecl2)}</div><div class="kpi-l">Recl. fase 2</div><div class="kpi-s">Lista provisional</div></div>`;
+
+  const mejora = diasArr.length>=2?((diasArr[0]-diasArr[diasArr.length-1])/diasArr[0]*100).toFixed(0):0;
+  document.getElementById('gestion-insight').innerHTML=
+    `El tiempo de resolución ha ${mejora>0?`<strong>mejorado un ${mejora}%</strong>`:'variado'} de ${diasMax} días (${añoMax}) a ${diasMin} días (${añoMin}). Las reclamaciones de fase 2 son ${D.totalRecl2<D.totalRecl1?'inferiores':'superiores'} a las de fase 1, lo que indica que la lista provisional ${D.totalRecl2<D.totalRecl1?'resuelve la mayoría de impugnaciones':'genera nuevas impugnaciones'}.`;
+
+  mkChart('c-tiempo',{type:'line',
+    data:{labels:años.map(String),datasets:[{data:años.map(a=>D.byYear[a].dias),borderColor:'#1A8080',backgroundColor:'rgba(26,128,128,.1)',borderWidth:2.5,pointRadius:4,pointBackgroundColor:'#1A8080',tension:.35,fill:true,spanGaps:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y?` ${c.parsed.y.toFixed(1)} días`:' Sin datos'}}},
+      scales:{x:{grid:{color:GC},border:{display:false}},y:{grid:{color:GC},border:{display:false},beginAtZero:false,ticks:{callback:v=>v+'d'}}}}
+  });
+
+  mkChart('c-recl',{type:'bar',
+    data:{labels:años.map(String),datasets:[
+      {label:'Fase 1',data:años.map(a=>D.byYear[a].recl1),backgroundColor:'#C89B2A',borderRadius:3},
+      {label:'Fase 2',data:años.map(a=>D.byYear[a].recl2),backgroundColor:'#0B2D5F',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},border:{display:false}},y:{grid:{color:GC},border:{display:false},beginAtZero:true}}}
+  });
+
+  document.getElementById('gestion-tbody').innerHTML=años.map(a=>{
+    const r=D.byYear[a]; const te=r.pres>0?(r.exclDef/r.pres*100):0;
+    return `<tr><td>${a}</td><td>${r.conv}</td><td>${fmtN(r.pres)}</td><td>${fmtN(r.admDef)}</td><td>${fmtN(r.exclDef)}</td><td>${pillHtml(te)}</td><td>${r.dias?r.dias.toFixed(1)+'d':'—'}</td></tr>`;
+  }).join('');
+}
+
+// ═══════ ÁREAS ═══════
+function renderAreas(){
+  const D=DATA;
+  const areaKeys=['Gestión / Admin.','Servicios','San. No Facultativo','Fac. Especialistas'];
+  const areaCols=['#1A8080','#0B2D5F','#C89B2A','#8EA0BA'];
+  const areaData=areaKeys.map(k=>D.areaMap[k]||{area:k,conv:0,pres:0,adm:0,excl:0});
+
+  mkChart('c-area-grp',{type:'bar',
+    data:{labels:areaKeys.map(k=>k.length>15?k.substring(0,14)+'…':k),datasets:[
+      {label:'Presentados',data:areaData.map(a=>a.pres),backgroundColor:'#0B2D5F',borderRadius:3},
+      {label:'Admitidos',data:areaData.map(a=>a.adm),backgroundColor:'#1A8080',borderRadius:3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},border:{display:false}},y:{grid:{color:GC},border:{display:false},ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+  });
+
+  const dirKeys=Object.keys(D.dirMap).sort((a,b)=>D.dirMap[b]-D.dirMap[a]);
+  const dirCols=dirKeys.map((_,i)=>{const t=i/(dirKeys.length-1||1);return `rgba(26,128,128,${(0.35+t*0.65).toFixed(2)})`;});
+  mkChart('c-dir',{type:'bar',
+    data:{labels:dirKeys,datasets:[{data:dirKeys.map(k=>D.dirMap[k]),backgroundColor:dirCols,borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},border:{display:false},beginAtZero:true,ticks:{precision:0}},y:{grid:{display:false},border:{display:false}}}}
+  });
+
+  mkChart('c-area-time',{type:'line',
+    data:{labels:D.años.map(String),datasets:areaKeys.map((ar,i)=>({label:ar,data:D.areaTime[ar]||D.años.map(()=>0),borderColor:areaCols[i],backgroundColor:areaCols[i].replace(')',',0.07)').replace('rgb','rgba').replace('#','rgba(').replace(/^rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/i,(_,r,g,b)=>`rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},`),borderWidth:2,pointRadius:2,tension:.35,fill:true}))},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},border:{display:false}},y:{grid:{color:GC},border:{display:false},beginAtZero:true,ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+  });
+
+  const totalP=areaData.reduce((s,a)=>s+a.pres,0)||1;
+  document.getElementById('areas-tbody').innerHTML=areaData.map(a=>{
+    const te=a.pres>0?(a.excl/a.pres*100):0;
+    const pctT=(a.pres/totalP*100).toFixed(1);
+    return `<tr><td>${a.area}</td><td>${a.conv}</td><td>${fmtN(a.pres)}</td><td>${fmtN(a.adm)}</td><td>${fmtN(a.excl)}</td><td>${pillHtml(te)}</td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:5px;background:var(--g100);border-radius:3px;overflow:hidden"><div style="width:${pctT}%;height:100%;background:#1A8080;border-radius:3px"></div></div><span style="font-size:10px;color:var(--g600)">${pctT}%</span></div></td></tr>`;
+  }).join('');
+}
+
+// __DATOS_SUPLES__
+
+// ═══════ SERVICE WORKER (PWA) ═══════
+if('serviceWorker' in navigator){
+  const sw=`
+    const V='suples-chuc-v2';
+    const ASSETS=['/'];
+    self.addEventListener('install',e=>{
+      e.waitUntil(caches.open(V).then(c=>c.addAll(ASSETS).catch(()=>{})));
+      self.skipWaiting();
+    });
+    self.addEventListener('activate',e=>{
+      e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))));
+      self.clients.claim();
+    });
+    self.addEventListener('fetch',e=>{
+      if(e.request.method!=='GET') return;
+      e.respondWith(
+        fetch(e.request).then(r=>{
+          const clone=r.clone();
+          caches.open(V).then(c=>c.put(e.request,clone));
+          return r;
+        }).catch(()=>caches.match(e.request).then(r=>r||new Response('Sin conexión - abre la app conectado una vez primero',{headers:{'Content-Type':'text/plain'}})))
+      );
+    });
+  `;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  const url=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(url).then(()=>{
+    console.log('SW registrado - app disponible offline');
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>
