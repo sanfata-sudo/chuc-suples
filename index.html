@@ -837,9 +837,18 @@ function renderCategorias(){
   const query=(document.getElementById('cat-search')||{}).value||'';
   const qLower=query.toLowerCase().trim();
 
+  // Normaliza texto: quita acentos y caracteres especiales para buscar sin tildes
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\/\-_]/g,' ');
+
+  // Búsqueda por palabras sueltas: cada palabra del query debe aparecer en la categoría
+  const matchCat = cat => {
+    const catNorm = norm(cat);
+    return norm(qLower).split(/\s+/).filter(Boolean).every(w => catNorm.includes(w));
+  };
+
   // Filtrar por búsqueda
   const filtered = qLower
-    ? D.cats.filter(c=>c.cat.toLowerCase().includes(qLower))
+    ? D.cats.filter(c=>matchCat(c.cat))
     : D.cats;
 
   const sorted=[...filtered].sort((a,b)=>b[orden]-a[orden]).slice(0,Math.min(n,filtered.length));
@@ -908,8 +917,9 @@ function renderEstadoActual(query){
   if(!cont) return;
 
   // Filtrar registros por búsqueda
+  const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\/\-_]/g,' ');
   let recs = query
-    ? D.records.filter(r=>r.cat.toLowerCase().includes(query))
+    ? D.records.filter(r=>norm(r.cat).includes(norm(query)))
     : D.records;
 
   // Si no hay búsqueda, mostrar solo los más recientes (último año por categoría)
