@@ -1,0 +1,37 @@
+name: 🔄 Actualizar Dashboard SUPLES
+
+# Se activa cuando se sube un ODS nuevo al repositorio
+on:
+  push:
+    paths:
+      - 'CONTROL_SUPLES.ods'
+  workflow_dispatch:  # También permite ejecutarlo manualmente desde GitHub
+
+jobs:
+  generar-dashboard:
+    name: Generar index.html con los nuevos datos
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: 🐍 Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Instalar dependencias
+        run: |
+          pip install pandas odfpy
+
+      - name: ⚙️ Generar el nuevo index.html
+        run: python generar.py
+
+      - name: 📤 Subir el index.html actualizado
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🔄 Dashboard actualizado automáticamente desde ODS"
+          file_pattern: index.html
+          commit_user_name: "GitHub Actions"
+          commit_user_email: "actions@github.com"
