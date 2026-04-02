@@ -368,6 +368,51 @@ tbody td{padding:8px 10px}
     </div>
   </div>
 
+  <!-- TAB: ACTUAL -->
+  <div class="pane" id="pane-actual">
+    <div class="filters" style="gap:8px;flex-wrap:wrap">
+      <label>Dirección:</label>
+      <select id="fil-actual-dir" onchange="renderActual()">
+        <option value="all">Todas las direcciones</option>
+        <option value="Médica">Médica</option>
+        <option value="Enfermería">Enfermería</option>
+        <option value="Gestión">Gestión</option>
+        <option value="RRHH">RRHH</option>
+        <option value="Gerencia">Gerencia</option>
+        <option value="Recursos Humanos">Recursos Humanos</option>
+        <option value="Ingeniería, Infraestructura y Tecnología">Ingeniería</option>
+        <option value="Servicios Generales">Servicios Generales</option>
+      </select>
+    </div>
+    <div id="actual-kpis" class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px"></div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-t">Convocatorias en curso por fase</div>
+        <div class="card-s">Estado actual de cada proceso sin finalizar</div>
+        <div class="chart-w" style="height:220px"><canvas id="c-actual-fases"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Distribución por dirección</div>
+        <div class="card-s">Nº de convocatorias en curso por dirección solicitante</div>
+        <div class="chart-w" style="height:220px"><canvas id="c-actual-dir"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-t">Candidatos presentados — en curso</div>
+      <div class="card-s">Volumen de solicitudes en convocatorias aún no finalizadas</div>
+      <div class="lgd">
+        <span class="lgd-i"><span class="lgd-d" style="background:var(--teal)"></span>Presentados</span>
+        <span class="lgd-i"><span class="lgd-d" style="background:var(--gold)"></span>Admitidos prov.</span>
+      </div>
+      <div class="chart-w" style="height:240px"><canvas id="c-actual-pres"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-t">Detalle de convocatorias en curso</div>
+      <div class="card-s">Tarjetas con el estado actual de cada proceso sin finalizar</div>
+      <div id="actual-cards" class="estado-grid" style="margin-top:8px"></div>
+    </div>
+  </div>
+
   <!-- TAB: CATEGORÍAS -->
   <div class="pane" id="pane-categorias">
     <div class="filters" style="gap:8px;flex-wrap:wrap">
@@ -375,6 +420,18 @@ tbody td{padding:8px 10px}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input class="search-input" id="cat-search" type="text" placeholder="Buscar categoría…" oninput="renderCategorias()" autocomplete="off">
       </div>
+      <label>Dirección:</label>
+      <select id="fil-cat-dir" onchange="renderCategorias()">
+        <option value="all">Todas</option>
+        <option value="Médica">Médica</option>
+        <option value="Enfermería">Enfermería</option>
+        <option value="Gestión">Gestión</option>
+        <option value="RRHH">RRHH</option>
+        <option value="Gerencia">Gerencia</option>
+        <option value="Recursos Humanos">RRHH (ant.)</option>
+        <option value="Ingeniería, Infraestructura y Tecnología">Ingeniería</option>
+        <option value="Servicios Generales">S. Generales</option>
+      </select>
       <label>Ordenar:</label>
       <select id="fil-cat-orden" onchange="renderCategorias()">
         <option value="pres">Presentados</option>
@@ -503,6 +560,10 @@ tbody td{padding:8px 10px}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     <span class="bot-lbl">Resumen</span>
   </button>
+  <button class="bot-btn" id="nb-actual" onclick="showPane('actual',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+    <span class="bot-lbl">Actual</span>
+  </button>
   <button class="bot-btn" id="nb-evolucion" onclick="showPane('evolucion',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     <span class="bot-lbl">Evolución</span>
@@ -538,6 +599,7 @@ function showPane(id, btn){
   btn.classList.add('active');
   document.getElementById('scroll-area').scrollTo(0,0);
   if(DATA){
+    if(id==='actual') renderActual();
     if(id==='evolucion') renderEvolucion();
     if(id==='categorias') renderCategorias();
     if(id==='gestion') renderGestion();
@@ -652,11 +714,12 @@ function processRows(rows, fname){
   // Agrupar por categoría
   const catMap = {};
   records.forEach(r=>{
-    if(!catMap[r.cat]) catMap[r.cat]={cat:r.cat,conv:0,pres:0,adm:0,excl:0};
+    if(!catMap[r.cat]) catMap[r.cat]={cat:r.cat,conv:0,pres:0,adm:0,excl:0,dirs:[]};
     catMap[r.cat].conv++;
     catMap[r.cat].pres+=r.pres;
     catMap[r.cat].adm+=r.admDef;
     catMap[r.cat].excl+=r.exclDef;
+    if(r.dir && !catMap[r.cat].dirs.includes(r.dir)) catMap[r.cat].dirs.push(r.dir);
   });
   const cats = Object.values(catMap).map(c=>({...c,tasa:c.pres>0?(c.excl/c.pres*100):0}));
 
@@ -846,10 +909,14 @@ function renderCategorias(){
     return norm(qLower).split(/\s+/).filter(Boolean).every(w => catNorm.includes(w));
   };
 
-  // Filtrar por búsqueda
-  const filtered = qLower
-    ? D.cats.filter(c=>matchCat(c.cat))
-    : D.cats;
+  const dirFil=document.getElementById('fil-cat-dir').value;
+
+  // Filtrar por búsqueda y por dirección
+  const filtered = D.cats.filter(c=>{
+    const matchQ = !qLower || matchCat(c.cat);
+    const matchD = dirFil==='all' || (c.dirs && c.dirs.includes(dirFil));
+    return matchQ && matchD;
+  });
 
   const sorted=[...filtered].sort((a,b)=>b[orden]-a[orden]).slice(0,Math.min(n,filtered.length));
   const chartData=sorted.slice(0,10);
@@ -984,6 +1051,84 @@ function renderEstadoActual(query){
     const año=Math.max(...D.records.map(r=>r.año));
     cont.insertAdjacentHTML('beforebegin',`<div style="font-size:11px;color:var(--g400);margin-bottom:8px">Mostrando convocatorias de ${año} · usa el buscador para ver otras categorías</div>`);
   }
+}
+
+// ═══════ ACTUAL ═══════
+function renderActual(){
+  const D=DATA;
+  const dirFil=document.getElementById('fil-actual-dir').value;
+
+  const enCurso = D.records.filter(r=>{
+    const sinDef = !r.fechaListaDef || r.fechaListaDef===null;
+    const matchDir = dirFil==='all' || r.dir===dirFil;
+    return sinDef && matchDir;
+  });
+
+  const totalPres = enCurso.reduce((s,r)=>s+r.pres,0);
+  const totalAdm  = enCurso.reduce((s,r)=>s+r.admProv,0);
+  const dirs = [...new Set(enCurso.map(r=>r.dir).filter(Boolean))];
+  document.getElementById('actual-kpis').innerHTML=`
+    <div class="kpi"><div class="kpi-v">${enCurso.length}</div><div class="kpi-l">En curso</div><div class="kpi-s">Sin lista definitiva</div></div>
+    <div class="kpi gold"><div class="kpi-v">${fmtN(totalPres)}</div><div class="kpi-l">Presentados</div><div class="kpi-s">En convocatorias activas</div></div>
+    <div class="kpi"><div class="kpi-v">${fmtN(totalAdm)}</div><div class="kpi-l">Admitidos prov.</div><div class="kpi-s">Provisionales en curso</div></div>
+    <div class="kpi green"><div class="kpi-v">${dirs.length}</div><div class="kpi-l">Direcciones</div><div class="kpi-s">Con convocatorias activas</div></div>`;
+
+  const faseCounts={bases:0,adex:0,prov:0,none:0};
+  enCurso.forEach(r=>{ faseCounts[r.estado.fase]=(faseCounts[r.estado.fase]||0)+1; });
+  const faseLabels=['Sin publicar','Bases publicadas','Ad&Ex provisional','Lista provisional'];
+  const faseVals=[faseCounts.none,faseCounts.bases,faseCounts.adex,faseCounts.prov];
+  const faseCols=['#8EA0BA','#1d6fa4','#C89B2A','#7c3aed'];
+
+  mkChart('c-actual-fases',{type:'doughnut',
+    data:{labels:faseLabels,datasets:[{data:faseVals,backgroundColor:faseCols,borderWidth:3,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'bottom',labels:{padding:10,usePointStyle:true,pointStyle:'rect',font:{size:10}}},
+        tooltip:{callbacks:{label:c=>` ${c.label}: ${c.parsed} conv.`}}}}
+  });
+
+  const dirCount={};
+  enCurso.forEach(r=>{const k=r.dir||'Sin datos';dirCount[k]=(dirCount[k]||0)+1;});
+  const dirKeys=Object.keys(dirCount).sort((a,b)=>dirCount[b]-dirCount[a]);
+  const dirCols=dirKeys.map((_,i)=>{const t=i/(dirKeys.length-1||1);return `rgba(26,128,128,${(0.4+t*0.6).toFixed(2)})`;});
+  mkChart('c-actual-dir',{type:'bar',
+    data:{labels:dirKeys,datasets:[{data:dirKeys.map(k=>dirCount[k]),backgroundColor:dirCols,borderRadius:5}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},border:{display:false},beginAtZero:true,ticks:{precision:0}},
+        y:{grid:{display:false},border:{display:false},ticks:{font:{size:10}}}}}
+  });
+
+  const sorted=[...enCurso].sort((a,b)=>b.pres-a.pres).slice(0,12);
+  mkChart('c-actual-pres',{type:'bar',
+    data:{labels:sorted.map(r=>r.cat.length>22?r.cat.substring(0,20)+'\u2026':r.cat),
+      datasets:[
+        {label:'Presentados',data:sorted.map(r=>r.pres),backgroundColor:'rgba(26,128,128,.8)',borderRadius:3},
+        {label:'Admitidos prov.',data:sorted.map(r=>r.admProv),backgroundColor:'rgba(200,155,42,.8)',borderRadius:3}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:GC},border:{display:false},ticks:{font:{size:9},maxRotation:35}},
+        y:{grid:{color:GC},border:{display:false},beginAtZero:true,ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+  });
+
+  const fases=[{key:'bases',lbl:'Bases'},{key:'adex',lbl:'Ad&Ex'},{key:'prov',lbl:'L. Prov.'},{key:'def',lbl:'L. Def.'}];
+  const faseIdx={bases:0,adex:1,prov:2,def:3,none:-1};
+  const cont=document.getElementById('actual-cards');
+  if(!enCurso.length){
+    cont.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--g400);font-size:13px">No hay convocatorias en curso para esta direcci\u00f3n</div>';
+    return;
+  }
+  cont.innerHTML=[...enCurso].sort((a,b)=>(faseIdx[b.estado.fase]||0)-(faseIdx[a.estado.fase]||0)).map(r=>{
+    const fi=faseIdx[r.estado.fase]||0;
+    const steps=fases.map((f,i)=>{
+      const cls=i<fi?'done':i===fi?'active':'pending';
+      const chk=cls==='done'?'\u2713':cls==='active'?'\u25cf':'';
+      return '<div class="step '+cls+'"><div class="step-dot">'+chk+'</div><div class="step-lbl">'+f.lbl+'</div></div>';
+    }).join('');
+    const presStr=r.pres?'<span class="estado-badge">\ud83d\udc64 '+fmtN(r.pres)+' pres.</span>':'';
+    const dirStr=r.dir?'<span class="estado-badge">\ud83c\udfe5 '+r.dir+'</span>':'';
+    const anyoStr='<span class="estado-badge">\ud83d\udcc5 '+r.año+'</span>';
+    return '<div class="estado-card"><div class="estado-cat">'+r.cat+'</div><div class="estado-id"><span class="fase-chip '+r.estado.cls+'">'+r.estado.label+'</span><span style="color:var(--g400);font-size:10px;margin-left:4px">ID: '+r.id+'</span></div><div class="stepper">'+steps+'</div><div class="estado-meta">'+presStr+dirStr+anyoStr+'</div></div>';
+  }).join('');
 }
 
 // ═══════ GESTIÓN ═══════
