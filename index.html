@@ -965,28 +965,31 @@ function renderCategorias(){
   </tr>`).join('') : `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--g400)">Sin resultados para "${qLower}"</td></tr>`;
 
   // Estado actual
-  renderEstadoActual(qLower);
+  renderEstadoActual(qLower, dirFil);
 }
 
 // ═══════ ESTADO ACTUAL ═══════
-function renderEstadoActual(query){
+function renderEstadoActual(query, dirFil){
   const D=DATA;
   const cont=document.getElementById('estado-grid');
   if(!cont) return;
 
-  // Filtrar registros por búsqueda
   const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[\/\-_]/g,' ');
-  let recs = query
-    ? D.records.filter(r=>norm(r.cat).includes(norm(query)))
-    : D.records;
 
-  // Si no hay búsqueda, mostrar solo los más recientes (último año por categoría)
-  if(!query){
+  // Aplicar los mismos filtros que la tabla: búsqueda + dirección
+  let recs = D.records.filter(r=>{
+    const matchQ = !query || norm(r.cat).includes(norm(query));
+    const matchD = !dirFil || dirFil==='all' || r.dir===dirFil;
+    return matchQ && matchD;
+  });
+
+  // Sin filtros activos: mostrar solo el año más reciente
+  if(!query && (!dirFil || dirFil==='all')){
     const maxAño=Math.max(...D.records.map(r=>r.año));
-    recs=D.records.filter(r=>r.año===maxAño);
+    recs=recs.filter(r=>r.año===maxAño);
   }
 
-  // Limitar a 30 tarjetas máximo para no saturar
+  // Limitar a 30 tarjetas máximo
   const mostrar=recs.slice(0,30);
 
   if(!mostrar.length){
