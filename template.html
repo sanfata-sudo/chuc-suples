@@ -183,13 +183,6 @@ tbody td{padding:8px 10px}
 .loading svg{width:40px;height:40px;animation:spin 1s linear infinite;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── CHIP FICHERO ── */
-.file-chip{
-  display:inline-flex;align-items:center;gap:6px;
-  background:var(--greenp);border:1px solid #b7e4c7;
-  color:var(--green);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;
-  margin-bottom:14px;
-}
 
 /* ── MODAL CONTRASEÑA ── */
 .modal-overlay{
@@ -270,7 +263,7 @@ tbody td{padding:8px 10px}
 <!-- HEADER -->
 <div class="hdr">
   <div class="hdr-stripe"></div>
-  <div class="hdr-inner" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer">
+  <div class="hdr-inner" onclick="document.getElementById('scroll-area').scrollTo({top:0,behavior:'smooth'})" style="cursor:pointer">
     <div class="hdr-logo">CHUC</div>
     <div class="hdr-text">
       <h1>SUPLES · CHUC</h1>
@@ -287,7 +280,6 @@ tbody td{padding:8px 10px}
 
   <!-- TAB: RESUMEN -->
   <div class="pane active" id="pane-resumen">
-    <div id="file-info"></div>
     <div id="kpis-container"></div>
     <div class="insight">
       <span class="insight-ico">💡</span>
@@ -754,7 +746,7 @@ function processRows(rows, fname){
   const totalRecl2 = records.reduce((s,r)=>s+r.recl2,0);
 
   return {
-    fname, records, años, byYear, cats, areaMap, areaTime, dirMap,
+    fname, fechaODS: new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'}), records, años, byYear, cats, areaMap, areaTime, dirMap,
     total:records.length, totalPres, totalAdm, totalExcl,
     totalRecl1, totalRecl2
   };
@@ -782,8 +774,7 @@ function renderResumen(){
   const diasMedios = (()=>{ const ds=años.map(a=>D.byYear[a].dias).filter(v=>v); return ds.length?Math.round(ds.reduce((s,v)=>s+v,0)/ds.length):'—'; })();
 
   // File chip
-  document.getElementById('file-info').innerHTML =
-    `<div class="file-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${D.fname} · ${D.total} convocatorias</div>`;
+
 
   // KPIs
   document.getElementById('kpis-container').innerHTML = `
