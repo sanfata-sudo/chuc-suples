@@ -118,8 +118,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;font-size:14px;color:var(--g800)
   .bot-nav{
     top:0;bottom:auto;left:0;width:200px;height:100%;flex-direction:column;
     border-top:none;border-right:1px solid var(--g100);padding-bottom:0;
-    padding-top:16px;box-shadow:none;
+    padding-top:115px;box-shadow:none;
     background:var(--white);position:fixed;z-index:150;
+    overflow-y:auto;
   }
   .bot-btn{
     flex:none;flex-direction:row;justify-content:flex-start;
@@ -561,13 +562,7 @@ tbody td{padding:8px 10px}
     <div class="card">
       <div class="card-t">Presentados por área a lo largo del tiempo</div>
       <div class="card-s">Evolución anual del volumen por colectivo</div>
-      <div class="lgd">
-        <span class="lgd-i"><span class="lgd-d" style="background:var(--teal)"></span>Gestión/Admin.</span>
-        <span class="lgd-i"><span class="lgd-d" style="background:var(--navy)"></span>Servicios</span>
-        <span class="lgd-i"><span class="lgd-d" style="background:var(--gold)"></span>San. No Fac.</span>
-        <span class="lgd-i"><span class="lgd-d" style="background:var(--g400)"></span>Fac. Esp.</span>
-      </div>
-      <div class="chart-w" style="height:220px"><canvas id="c-area-time"></canvas></div>
+      <div class="chart-w" style="height:260px"><canvas id="c-area-time"></canvas></div>
     </div>
     <div class="card">
       <div class="card-t">Tabla por área</div>
@@ -1286,10 +1281,31 @@ function renderAreas(){
       scales:{x:{grid:{color:GC},border:{display:false},beginAtZero:true,ticks:{precision:0}},y:{grid:{display:false},border:{display:false}}}}
   });
 
+  // Colores distintos y legibles para el gráfico de líneas por área
+  const areaTimeColors=[
+    {line:'#1A9E75',fill:'rgba(26,158,117,.12)'},   // verde teal — Gestión/Admin
+    {line:'#2D7DD2',fill:'rgba(45,125,210,.12)'},   // azul — Servicios
+    {line:'#E07B39',fill:'rgba(224,123,57,.12)'},   // naranja — San. No Fac
+    {line:'#9B59B6',fill:'rgba(155,89,182,.12)'},   // morado — Fac. Esp.
+  ];
   mkChart('c-area-time',{type:'line',
-    data:{labels:D.años.map(String),datasets:areaKeys.map((ar,i)=>({label:ar,data:D.areaTime[ar]||D.años.map(()=>0),borderColor:areaCols[i],backgroundColor:areaCols[i].replace(')',',0.07)').replace('rgb','rgba').replace('#','rgba(').replace(/^rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2}),/i,(_,r,g,b)=>`rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},`),borderWidth:2,pointRadius:2,tension:.35,fill:true}))},
-    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:GC},border:{display:false}},y:{grid:{color:GC},border:{display:false},beginAtZero:true,ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
+    data:{labels:D.años.map(String),datasets:areaKeys.map((ar,i)=>({
+      label:ar,
+      data:D.areaTime[ar]||D.años.map(()=>0),
+      borderColor:areaTimeColors[i].line,
+      backgroundColor:areaTimeColors[i].fill,
+      borderWidth:2.5,
+      pointRadius:4,
+      pointBackgroundColor:areaTimeColors[i].line,
+      tension:.35,
+      fill:true
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'bottom',labels:{padding:12,usePointStyle:true,pointStyle:'circle',font:{size:11},
+        generateLabels:(chart)=>areaKeys.map((ar,i)=>({text:ar,fillStyle:areaTimeColors[i].line,strokeStyle:areaTimeColors[i].line,lineWidth:0,hidden:false,index:i}))
+      }}},
+      scales:{x:{grid:{color:GC},border:{display:false}},
+        y:{grid:{color:GC},border:{display:false},beginAtZero:true,ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}}}
   });
 
   const totalP=areaData.reduce((s,a)=>s+a.pres,0)||1;
