@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-generar.py — Script de generación automática del Dashboard SUPLES · CHUC
-Lee el archivo CONTROL_SUPLES.ods y genera el index.html con los datos actualizados.
-Se ejecuta automáticamente desde GitHub Actions cuando se sube un ODS nuevo.
+generar.py - Script de generacion automatica del Dashboard SUPLES CHUC
+Lee CONTROL_SUPLES.ods (convocatorias) y ESTADO_VALORACION.ods (ayudas)
+y genera el index.html con todos los datos actualizados.
+Se ejecuta automaticamente desde GitHub Actions al subir cualquiera de los dos ODS.
 """
 
 import pandas as pd
@@ -11,9 +12,15 @@ import sys
 import os
 from datetime import datetime
 
-ODS_FILE     = 'CONTROL_SUPLES.ods'
-TEMPLATE_FILE = "template.html"
-OUTPUT_FILE  = 'index.html'
+ODS_FILE       = 'CONTROL_SUPLES.ods'
+ODS_VALORACION = 'ESTADO_VALORACIÓN.ods'
+TEMPLATE_FILE  = "template.html"
+OUTPUT_FILE    = 'index.html'
+
+COLORES_MIEMBRO = [
+    '#1A8080','#163A78','#D97706','#C0392B','#1A7850',
+    '#7B3F00','#4A5568','#6B46C1','#2C7A7B','#B7791F',
+]
 
 def fmt_date(v):
     """Convierte un valor de fecha a string ISO o None."""
@@ -39,25 +46,30 @@ def safe_str(v):
     return str(v).strip()
 
 def safe_num(v):
-    """Convierte a número seguro."""
+    """Convierte a numero seguro."""
     try:
         x = float(v)
         return 0.0 if pd.isna(x) else x
     except Exception:
         return 0.0
 
-def procesar_ods(ruta):
-    """Lee el ODS y devuelve la lista de registros como dicts."""
-    print(f"📂 Leyendo {ruta}...")
+def safe_int(v):
+    """Convierte a entero seguro."""
+    try:
+        x = float(v)
+        return 0 if pd.isna(x) else int(x)
+    except Exception:
+        return 0
 
+def procesar_ods(ruta):
+    """Lee CONTROL_SUPLES.ods y devuelve lista de registros."""
+    print(f"Leyendo {ruta}...")
     df = pd.read_excel(ruta, engine='odf', sheet_name='1_Datos_generales')
     df = df.dropna(subset=['AÑO', 'ID'])
     df['AÑO'] = pd.to_numeric(df['AÑO'], errors='coerce')
     df = df[df['AÑO'].notna()].copy()
     df['AÑO'] = df['AÑO'].astype(int)
-
-    print(f"✅ {len(df)} convocatorias encontradas")
-
+    print(f"  {len(df)} convocatorias encontradas")
     registros = []
     for _, r in df.iterrows():
         reg = {
@@ -85,31 +97,154 @@ def procesar_ods(ruta):
             'RG BASES': safe_str(r.get('RG BASES', '')),
             'RG LISTA DEF': safe_str(r.get('RG LISTA DEF', '')),
         }
-        # Limpiar None en tiempo
         if reg['TIEMPO EN RESOLVER (días)'] == 0.0:
             reg['TIEMPO EN RESOLVER (días)'] = None
         registros.append(reg)
-
     return registros
 
-def generar_html(registros, template_path, output_path):
-    """Inyecta los datos en el template y genera el index.html."""
-    print(f"📄 Leyendo template {template_path}...")
+def procesar_valoracion(ruta):
+    """
+    Lee ESTADO_VALORACION.ods y devuelve el bloque JS 'const AY = {...};'.
+    Detecta automaticamente la estructura del archivo.
+    """
+    print(f"Leyendo {ruta}...")
+    try:
+        xl = pd.ExcelFile(ruta, engine='odf')
+        sheet = xl.sheet_names[0]
+        df = pd.read_excel(ruta, engine='odf', sheet_name=sheet)
+        cols = [str(c).strip() for c in df.columns]
+        df.columns = cols
+        print(f"  Hoja: '{sheet}' | Columnas: {cols}")
 
+        LETRAS = ['A','B','C','D','E-F','G','H','I-J-K','L','M',
+                  'N-Ñ-O','P-Q','R','S-T','U-Z','ÁÑADIDOS']
+
+        # Detectar columna de nombre del miembro
+        nombre_col = cols[0]
+        for c in cols:
+            cu = c.upper()
+            if cu in ('NOMBRE', 'MIEMBRO', 'MIEMBROS', 'NOMBRE COMPLETO',
+                      'APELLIDOS', 'APELLIDO'):
+                nombre_col = c
+                break
+
+        # Detectar columna de total
+        total_col = None
+        for c in cols:
+            if c.upper() in ('TOTAL', 'TOTAL VALORADAS', 'TOTAL SOLICITUDES',
+                             'SUMA', 'TOTAL GENERAL'):
+                total_col = c
+                break
+
+        # Detectar columna de total global de solicitudes
+        total_solic_col = None
+        for c in cols:
+            cu = c.upper()
+            if 'TOTAL' in cu and ('SOLIC' in cu or 'PRES' in cu):
+                total_solic_col = c
+                break
+
+        miembros = []
+        total_solicitudes = 0
+        valoradas_total = 0
+
+        for _, row in df.iterrows():
+            nombre = safe_str(row.get(nombre_col, ''))
+            if not nombre or nombre.upper() in ('TOTAL','SUMA','TOTALES',
+                                                 'NAN','','TOTAL SOLICITUDES'):
+                # Podria ser la fila de totales globales
+                if nombre.upper() in ('TOTAL','TOTALES','TOTAL SOLICITUDES'):
+                    if total_solic_col:
+                        total_solicitudes = safe_int(row.get(total_solic_col, 0))
+                    elif total_col:
+                        total_solicitudes = safe_int(row.get(total_col, 0))
+                continue
+
+            vals = []
+            for letra in LETRAS:
+                v = 0
+                for c in cols:
+                    if c.strip().upper() == letra.upper():
+                        v = safe_int(row.get(c, 0))
+                        break
+                vals.append(v)
+
+            if total_col:
+                tot = safe_int(row.get(total_col, 0))
+            else:
+                tot = sum(vals)
+
+            valoradas_total += tot
+            partes = nombre.split()
+            nombre_corto = partes[0] if partes else nombre
+            color = COLORES_MIEMBRO[len(miembros) % len(COLORES_MIEMBRO)]
+            miembros.append({
+                'nombre': nombre,
+                'nombreCorto': nombre_corto,
+                'vals': vals,
+                'total': tot,
+                'color': color,
+            })
+
+        # Si no encontramos total de solicitudes en fila de totales,
+        # intentar sumar una columna especifica
+        if total_solicitudes == 0 and total_solic_col:
+            total_solicitudes = int(df[total_solic_col].dropna().sum())
+        if total_solicitudes == 0:
+            total_solicitudes = valoradas_total
+
+        pct = round(valoradas_total / total_solicitudes * 100, 2) if total_solicitudes > 0 else 0.0
+        print(f"  Total solicitudes: {total_solicitudes} | Valoradas: {valoradas_total} | {pct}%")
+        print(f"  Miembros procesados: {len(miembros)}")
+
+        letras_js = json.dumps(LETRAS, ensure_ascii=False)
+        miembros_lines = []
+        for m in miembros:
+            vals_str = json.dumps(m['vals'])
+            ne = m['nombre'].replace("'", "\\'")
+            ce2 = m['nombreCorto'].replace("'", "\\'")
+            miembros_lines.append(
+                f"    {{nombre:'{ne}', nombreCorto:'{ce2}', vals:{vals_str}, total:{m['total']}, color:'{m['color']}'}}"
+            )
+        miembros_js = ',\n'.join(miembros_lines)
+
+        return f"""// ======== AYUDAS DE ACCION SOCIAL ========
+const AY = {{
+  total: {total_solicitudes},
+  valoradas: {valoradas_total},
+  pct: {pct},
+  letras: {letras_js},
+  miembros: [
+{miembros_js}
+  ]
+}};"""
+
+    except Exception as e:
+        print(f"ERROR leyendo {ruta}: {e}")
+        import traceback; traceback.print_exc()
+        return """// ======== AYUDAS DE ACCION SOCIAL (SIN DATOS) ========
+const AY = {
+  total: 0, valoradas: 0, pct: 0,
+  letras: ['A','B','C','D','E-F','G','H','I-J-K','L','M','N-\u00d1-O','P-Q','R','S-T','U-Z','\u00c1\u00d1ADIDOS'],
+  miembros: []
+};"""
+
+def generar_html(registros, bloque_ay, template_path, output_path):
+    """Inyecta ambos bloques de datos en el template y genera index.html."""
+    print(f"Leyendo template {template_path}...")
     with open(template_path, 'r', encoding='utf-8') as f:
         template = f.read()
 
     if '// __DATOS_SUPLES__' not in template:
-        print("❌ ERROR: El template no contiene el marcador // __DATOS_SUPLES__")
+        print("ERROR: El template no contiene el marcador // __DATOS_SUPLES__")
         sys.exit(1)
 
-    # Serializar datos a JSON compacto
     json_data = json.dumps(registros, ensure_ascii=False, separators=(',', ':'))
     n = len(registros)
     fecha = datetime.now().strftime('%d/%m/%Y %H:%M')
 
-    bloque = f"""// ═══════ DATOS POR DEFECTO ═══════
-// Generado automáticamente el {fecha} · {n} convocatorias
+    bloque_suples = f"""// ======= DATOS POR DEFECTO =======
+// Generado automaticamente el {fecha} - {n} convocatorias
 (function initDefault(){{
   const rows = {json_data};
   DATA = processRows(rows, 'CONTROL_SUPLES.ods');
@@ -117,44 +252,55 @@ def generar_html(registros, template_path, output_path):
   setTimeout(()=>{{
     if(!sessionStorage.getItem('welcomed')){{
       sessionStorage.setItem('welcomed','1');
-      toast('✅ {n} convocatorias cargadas · Actualizado {fecha}', 3500);
+      toast('\u2705 {n} convocatorias cargadas \u00b7 Actualizado {fecha}', 3500);
     }}
   }}, 800);
 }})();
 
 """
 
-    html = template.replace('// __DATOS_SUPLES__\n\n', bloque)
+    html = template.replace('// __DATOS_SUPLES__\n\n', bloque_suples)
+
+    if '// __DATOS_VALORACION__' in html:
+        html = html.replace('// __DATOS_VALORACION__', bloque_ay)
+        print("  Seccion Ayudas de Accion Social actualizada.")
+    else:
+        print("  AVISO: marcador __DATOS_VALORACION__ no encontrado en template.")
 
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html)
 
     size_kb = len(html) / 1024
-    print(f"✅ {output_path} generado · {size_kb:.1f} KB · {n} convocatorias")
+    print(f"Generado {output_path} - {size_kb:.1f} KB - {n} convocatorias")
 
 def main():
-    # Verificar que existe el ODS
     if not os.path.exists(ODS_FILE):
-        print(f"❌ ERROR: No se encuentra el archivo {ODS_FILE}")
-        print(f"   Archivos en el directorio actual: {os.listdir('.')}")
+        print(f"ERROR: No se encuentra {ODS_FILE}")
+        print(f"  Archivos en directorio: {os.listdir('.')}")
         sys.exit(1)
-
-    # Verificar que existe el template
     if not os.path.exists(TEMPLATE_FILE):
-        print(f"❌ ERROR: No se encuentra el archivo {TEMPLATE_FILE}")
+        print(f"ERROR: No se encuentra {TEMPLATE_FILE}")
         sys.exit(1)
 
-    print("🚀 Iniciando generación del Dashboard SUPLES · CHUC")
-    print(f"   ODS:      {ODS_FILE}")
-    print(f"   Template: {TEMPLATE_FILE}")
-    print(f"   Output:   {OUTPUT_FILE}")
+    print("Iniciando generacion del Dashboard SUPLES CHUC")
+    print(f"  ODS principal  : {ODS_FILE}")
+    print(f"  ODS valoracion : {ODS_VALORACION}")
+    print(f"  Template       : {TEMPLATE_FILE}")
+    print(f"  Output         : {OUTPUT_FILE}")
     print()
 
     registros = procesar_ods(ODS_FILE)
-    generar_html(registros, TEMPLATE_FILE, OUTPUT_FILE)
+
+    if os.path.exists(ODS_VALORACION):
+        bloque_ay = procesar_valoracion(ODS_VALORACION)
+    else:
+        print(f"AVISO: {ODS_VALORACION} no encontrado - Ayudas sin actualizar")
+        bloque_ay = "const AY = {total:0,valoradas:0,pct:0,letras:[],miembros:[]};"
+
+    generar_html(registros, bloque_ay, TEMPLATE_FILE, OUTPUT_FILE)
 
     print()
-    print("🎉 ¡Listo! El index.html ha sido actualizado.")
+    print("Listo! index.html actualizado con datos de ambos ODS.")
 
 if __name__ == '__main__':
     main()
