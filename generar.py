@@ -139,7 +139,8 @@ def procesar_valoracion(ruta):
         for c in cols:
             cu = c.upper()
             if cu in ('NOMBRE', 'MIEMBRO', 'MIEMBROS', 'NOMBRE COMPLETO',
-                      'APELLIDOS', 'APELLIDO'):
+                      'APELLIDOS', 'APELLIDO', 'MIEMBRO CVAS-HCU',
+                      'MIEMBRO CVAS HCU', 'MIEMBROS CVAS-HCU'):
                 nombre_col = c
                 break
 
