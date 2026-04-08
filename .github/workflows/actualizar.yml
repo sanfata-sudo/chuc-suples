@@ -5,7 +5,7 @@ on:
   push:
     paths:
       - 'CONTROL_SUPLES.ods'
-            - 'ESTADO_VALORACIÓN.ods'
+      - 'ESTADO_VALORACIÓN.ods'
   workflow_dispatch:  # También permite ejecutarlo manualmente desde GitHub
 
 jobs:
