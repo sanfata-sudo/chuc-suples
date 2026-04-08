@@ -111,10 +111,25 @@ def procesar_valoracion(ruta):
     try:
         xl = pd.ExcelFile(ruta, engine='odf')
         sheet = xl.sheet_names[0]
-        df = pd.read_excel(ruta, engine='odf', sheet_name=sheet)
+        # Leer sin encabezados primero para detectar estructura
+        df_raw = pd.read_excel(ruta, engine='odf', sheet_name=sheet, header=None)
+        print(f"  Hoja: '{sheet}' | Shape: {df_raw.shape}")
+        print(f"  Primeras 3 filas:")
+        for i in range(min(3, len(df_raw))):
+            print(f"    Fila {i}: {list(df_raw.iloc[i])}")
+        # Detectar fila de encabezados: buscar la fila con mas texto
+        header_row = 0
+        max_text = 0
+        for i in range(min(5, len(df_raw))):
+            row_text = sum(1 for v in df_raw.iloc[i] if isinstance(v, str) and str(v).strip())
+            if row_text > max_text:
+                max_text = row_text
+                header_row = i
+        # Releer con la fila de encabezados correcta
+        df = pd.read_excel(ruta, engine='odf', sheet_name=sheet, header=header_row)
         cols = [str(c).strip() for c in df.columns]
         df.columns = cols
-        print(f"  Hoja: '{sheet}' | Columnas: {cols}")
+        print(f"  Encabezados detectados en fila {header_row}: {cols}")
 
         LETRAS = ['A','B','C','D','E-F','G','H','I-J-K','L','M',
                   'N-Ñ-O','P-Q','R','S-T','U-Z','ÁÑADIDOS']
