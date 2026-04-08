@@ -12,7 +12,7 @@ import os
 from datetime import datetime
 
 ODS_FILE     = 'CONTROL_SUPLES.ods'
-TEMPLATE_FILE = "plantilla.html"
+TEMPLATE_FILE = "template.html"
 OUTPUT_FILE  = 'index.html'
 
 def fmt_date(v):
