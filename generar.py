@@ -42,6 +42,12 @@ def safe_num(v):
     except Exception:
         return 0.0
 
+_PARTICULAS = {'de', 'del', 'la', 'las', 'los', 'y', 'san', 'santa'}
+
+def iniciales(nombre):
+    tokens = [t for t in nombre.split() if t.lower() not in _PARTICULAS]
+    return '.'.join(t[0].upper() for t in tokens) + '.' if tokens else ''
+
 def procesar_suples(ruta):
     print(f"Leyendo {ruta}...")
     df = pd.read_excel(ruta, engine='odf', sheet_name='1_Datos_generales')
@@ -110,11 +116,10 @@ def procesar_ayudas(ruta):
         vals_raw = df.iloc[i, 1:17].tolist()  # 16 columnas de letras
         vals = [int(safe_num(v)) for v in vals_raw]
         total = sum(vals)
-        partes = nombre.split()
-        nombre_corto = partes[-2] if len(partes) >= 2 else nombre
+        ini = iniciales(nombre)
         miembros.append({
-            'nombre': nombre,
-            'nombreCorto': nombre_corto,
+            'nombre': ini,
+            'nombreCorto': ini,
             'vals': vals,
             'total': total,
             'color': COLORES[len(miembros) % len(COLORES)]
