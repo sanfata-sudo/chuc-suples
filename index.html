@@ -284,7 +284,7 @@ tbody td{padding:8px 10px}
 .no-res{text-align:center;padding:32px 16px;color:var(--g400);font-size:13px}
 </style>
 </head>
-<body>
+<body> <style> #chuc-login-overlay{position:fixed;inset:0;background:#0B2D5F;display:flex;align-items:center;justify-content:center;z-index:999999} #chuc-login-box{background:#fff;border-radius:16px;padding:40px 36px;width:300px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.35)} #chuc-login-box .chuc-logo{font-size:2rem;font-weight:800;color:#0B2D5F;margin-bottom:4px} #chuc-login-box .chuc-sub{font-size:.82rem;color:#666;margin-bottom:28px} #chuc-login-box input{width:100%;padding:13px 16px;border:2px solid #cdd4db;border-radius:8px;font-size:1.5rem;text-align:center;letter-spacing:8px;outline:none;box-sizing:border-box;margin-bottom:14px} #chuc-login-box input:focus{border-color:#0B2D5F} #chuc-login-box button{width:100%;padding:13px;background:#0B2D5F;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer} #chuc-login-err{color:#c0392b;font-size:.83rem;margin-top:10px;min-height:16px} #chuc-main{display:none} </style> <div id="chuc-login-overlay">   <div id="chuc-login-box">     <div class="chuc-logo">CHUC</div>     <div class="chuc-sub">RRHH Acceso Restringido</div>     <input type="password" id="chuc-pwd" placeholder="Contrasena" maxlength="20" autocomplete="off" />     <button onclick="chucLogin()">Acceder</button>     <div id="chuc-login-err"></div>   </div> </div> <div id="chuc-main">
 
 <!-- HEADER -->
 <div class="hdr">
@@ -1441,5 +1441,5 @@ if('serviceWorker' in navigator){
   }).catch(()=>{});
 }
 </script>
-</body>
+</div> <script> (function(){   var K="MjU1NjIz";   function chk(v){try{return btoa(v)===K;}catch(e){return false;}}   window.chucLogin=function(){     var v=document.getElementById("chuc-pwd").value;     if(chk(v)){       document.getElementById("chuc-login-overlay").style.display="none";       document.getElementById("chuc-main").style.display="block";       sessionStorage.setItem("chuc_auth","1");     } else {       document.getElementById("chuc-login-err").textContent="Contrasena incorrecta.";       document.getElementById("chuc-pwd").value="";       document.getElementById("chuc-pwd").focus();     }   };   document.addEventListener("DOMContentLoaded",function(){     var p=document.getElementById("chuc-pwd");     if(p)p.addEventListener("keydown",function(e){if(e.key==="Enter")window.chucLogin();});     if(sessionStorage.getItem("chuc_auth")==="1"){       document.getElementById("chuc-login-overlay").style.display="none";       document.getElementById("chuc-main").style.display="block";     } else if(p){p.focus();}   }); })(); </script> </body>
 </html>
