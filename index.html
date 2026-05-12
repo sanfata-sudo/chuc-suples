@@ -1330,9 +1330,7 @@ function switchMode(mode){
   document.getElementById('mbtn-'+mode).classList.add('active');
   if(mode==='ayudas') renderAyudas();
 }
-
     <div class="kpi red"><div class="kpi-v">${pendientes}</div><div class="kpi-l">Pendientes</div><div class="kpi-s">Por valorar</div></div>
-
   // Barra de progreso
   setTimeout(()=>{
     document.getElementById('ay-prog-bar').style.width=A.pct.toFixed(2)+'%';
