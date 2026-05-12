@@ -61,10 +61,6 @@ body{font-family:'DM Sans',system-ui,sans-serif;font-size:14px;color:var(--g800)
 .mode-btn.active{background:rgba(255,255,255,.15);color:#fff;font-weight:600}
 .mode-btn svg{width:14px;height:14px;flex-shrink:0}
 
-/* ── AYUDAS SECTION ── */
-#mode-ayudas{display:none}
-#mode-ayudas.active{display:block}
-#mode-suple.hidden{display:none}
 .ay-scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 14px 40px}
 @media(min-width:768px){.ay-scroll{padding:20px 28px 40px}}
 .prog-wrap{background:var(--white);border:1px solid var(--g100);border-radius:var(--rL);padding:20px 22px;margin-bottom:14px;box-shadow:var(--sh)}
@@ -1335,19 +1331,7 @@ function switchMode(mode){
   if(mode==='ayudas') renderAyudas();
 }
 
-// ═══════ AYUDAS DE ACCIÓN SOCIAL ═══════
-const AY = {"total":0,"valoradas":0,"pct":0.0,"letras":[],"miembros":[]};
-
-function renderAyudas(){
-  const A=AY;
-  const pendientes=A.total-A.valoradas;
-
-  // KPIs
-  document.getElementById('ay-kpis').innerHTML=`
-    <div class="kpi gold"><div class="kpi-v">${A.total.toLocaleString('es-ES')}</div><div class="kpi-l">Total solicitudes</div><div class="kpi-s">Convocatoria 2025-2026</div></div>
-    <div class="kpi green"><div class="kpi-v">${A.valoradas.toLocaleString('es-ES')}</div><div class="kpi-l">Valoradas</div><div class="kpi-s">${A.pct.toFixed(2)}% completado</div></div>
     <div class="kpi red"><div class="kpi-v">${pendientes}</div><div class="kpi-l">Pendientes</div><div class="kpi-s">Por valorar</div></div>
-    <div class="kpi"><div class="kpi-v">5</div><div class="kpi-l">Miembros CVAS-HCU</div><div class="kpi-s">Comisión valoradora</div></div>`;
 
   // Barra de progreso
   setTimeout(()=>{
