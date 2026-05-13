@@ -286,6 +286,167 @@ tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
   padding:30px;text-align:center;color:var(--scs-text-muted);
 }
 
+/* ===== ESTADO ACTUAL (phase cards) ===== */
+.estado-toolbar{
+  background:var(--scs-card);border:1px solid var(--scs-border);
+  border-radius:10px;padding:14px 16px;margin-bottom:14px;
+  display:flex;flex-wrap:wrap;gap:14px;align-items:center;
+}
+.estado-toolbar .est-info{
+  flex:1;min-width:240px;font-size:13px;color:var(--scs-text-muted);
+}
+.estado-toolbar select,.estado-toolbar input{
+  padding:8px 10px;border:1px solid var(--scs-border);border-radius:6px;
+  font-family:inherit;font-size:13px;background:white;color:var(--scs-text);
+}
+.phase-filter{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.phase-filter .chip{
+  cursor:pointer;padding:6px 12px;font-size:12px;
+  background:var(--scs-card);border:1px solid var(--scs-border);
+  border-radius:18px;color:var(--scs-text-muted);font-weight:500;
+  transition:all .15s;
+}
+.phase-filter .chip:hover{border-color:var(--scs-blue);color:var(--scs-blue)}
+.phase-filter .chip.active{
+  background:var(--scs-blue);color:white;border-color:var(--scs-blue);
+}
+.estado-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));
+  gap:14px;
+}
+.estado-card{
+  background:var(--scs-card);border:1px solid var(--scs-border);
+  border-radius:10px;padding:16px 18px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.03);
+}
+.estado-card .ec-head{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+  margin-bottom:10px;
+}
+.estado-card .ec-title{
+  font-size:14px;font-weight:600;color:var(--scs-text);line-height:1.3;
+}
+.estado-card .ec-id{
+  font-size:11px;color:var(--scs-text-muted);margin-top:2px;
+  letter-spacing:.3px;
+}
+.phase-chip{
+  display:inline-block;padding:3px 10px;border-radius:12px;
+  font-size:11px;font-weight:600;white-space:nowrap;
+}
+.phase-chip.bases{background:#FDECC8;color:#A05E00}
+.phase-chip.adex{background:#FFF3CD;color:#856404}
+.phase-chip.prov{background:#E1D5F0;color:#5B2A86}
+.phase-chip.def{background:#D4EDDA;color:#155724}
+.phase-chip.init{background:#E9ECEF;color:#495057}
+.phase-bar{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin:14px 4px 6px;position:relative;
+}
+.phase-bar::before{
+  content:"";position:absolute;left:14px;right:14px;top:11px;
+  height:2px;background:#E1E7EE;z-index:0;
+}
+.phase-bar .ph-step{
+  position:relative;z-index:1;display:flex;flex-direction:column;
+  align-items:center;gap:6px;flex:1;
+}
+.phase-bar .ph-dot{
+  width:22px;height:22px;border-radius:50%;
+  background:#E9ECEF;color:#ADB5BD;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;
+  border:2px solid #fff;box-shadow:0 0 0 1px #E1E7EE;
+}
+.phase-bar .ph-step.done .ph-dot{
+  background:var(--scs-cyan);color:white;box-shadow:0 0 0 1px var(--scs-cyan);
+}
+.phase-bar .ph-step.current .ph-dot{
+  background:var(--scs-accent);color:white;box-shadow:0 0 0 1px var(--scs-accent);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 1px var(--scs-accent),0 0 0 0 rgba(243,146,0,0.5)}
+  50%{box-shadow:0 0 0 1px var(--scs-accent),0 0 0 6px rgba(243,146,0,0)}
+}
+.phase-bar .ph-label{
+  font-size:10px;color:var(--scs-text-muted);font-weight:500;
+  text-align:center;line-height:1.2;
+}
+.phase-bar .ph-step.done .ph-label,.phase-bar .ph-step.current .ph-label{
+  color:var(--scs-text);font-weight:600;
+}
+.estado-card .ec-meta{
+  display:flex;flex-wrap:wrap;gap:10px 14px;font-size:12px;
+  color:var(--scs-text-muted);margin-top:10px;
+  padding-top:10px;border-top:1px solid #F0F3F7;
+}
+.estado-card .ec-meta b{color:var(--scs-text);font-weight:600}
+.estado-card .ec-dir{
+  font-size:11px;color:var(--scs-blue);font-weight:600;
+  text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;
+}
+
+/* ===== INSIGHT CHIP (Tiempos) ===== */
+.insight-banner{
+  background:linear-gradient(90deg,rgba(0,168,198,0.08) 0%,rgba(46,139,87,0.08) 100%);
+  border:1px solid var(--scs-cyan-light);
+  border-radius:10px;padding:14px 18px;margin-bottom:18px;
+  font-size:13.5px;color:var(--scs-text);line-height:1.5;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.insight-banner.warn{
+  background:linear-gradient(90deg,rgba(243,146,0,0.10) 0%,rgba(192,57,43,0.08) 100%);
+  border-color:#F39200;
+}
+.insight-banner .ic{font-size:18px;flex-shrink:0;line-height:1.4}
+.insight-banner b{color:var(--scs-blue);font-weight:700}
+
+/* ===== AGGREGATE PANEL (Estado actual) ===== */
+.agg-panel{
+  background:var(--scs-card);border:1px solid var(--scs-border);
+  border-radius:10px;padding:18px 20px;
+  border-left:4px solid var(--scs-accent);
+  box-shadow:0 1px 3px rgba(0,0,0,0.03);
+}
+.agg-panel .agg-title{
+  font-size:13px;color:var(--scs-text-muted);
+  text-transform:uppercase;letter-spacing:.5px;font-weight:600;
+  margin-bottom:4px;
+}
+.agg-panel .agg-cat{
+  font-family:'Roboto Slab',serif;font-size:18px;
+  color:var(--scs-blue);font-weight:700;margin-bottom:14px;
+}
+.agg-stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:14px;
+}
+.agg-stat{
+  border-left:3px solid var(--scs-blue);padding:4px 0 4px 12px;
+}
+.agg-stat.cyan{border-color:var(--scs-cyan)}
+.agg-stat.green{border-color:var(--scs-success)}
+.agg-stat.red{border-color:var(--scs-danger)}
+.agg-stat.orange{border-color:var(--scs-accent)}
+.agg-stat .as-val{
+  font-family:'Roboto Slab',serif;font-size:22px;font-weight:700;
+  color:var(--scs-blue);line-height:1.1;
+}
+.agg-stat .as-lbl{
+  font-size:11.5px;color:var(--scs-text-muted);
+  text-transform:uppercase;letter-spacing:.5px;font-weight:600;
+  margin-top:2px;
+}
+
+/* Counter pill for tables */
+.count-pill{
+  background:var(--scs-blue);color:white;
+  padding:5px 12px;border-radius:14px;
+  font-size:12px;font-weight:600;
+  align-self:center;
+}
+
 /* ===== FOOTER ===== */
 footer{
   text-align:center;color:var(--scs-text-muted);
@@ -334,11 +495,11 @@ footer{
       <div class="brand-mark">SCS</div>
       <div class="brand-text">
         <h1>Control de Convocatorias Supletorias</h1>
-        <div class="org">Servicio Canario de la Salud · Selección y Formación</div>
+        <div class="org">Servicio Canario de la Salud · Servicio de Selección, Evaluación y Formación</div>
       </div>
     </div>
     <div class="head-right">
-      <span class="pill" id="recordsPill">— registros</span>
+      <span class="pill" id="recordsPill">— convocatorias</span>
       <button class="logout" id="logoutBtn">Cerrar sesión</button>
     </div>
   </div>
@@ -347,6 +508,7 @@ footer{
 <div class="tabs-wrap">
   <div class="tabs">
     <div class="tab active" data-tab="resumen">Resumen general</div>
+    <div class="tab" data-tab="estado">Estado actual</div>
     <div class="tab" data-tab="anio">Por año</div>
     <div class="tab" data-tab="categoria">Por categoría</div>
     <div class="tab" data-tab="direccion">Por dirección</div>
@@ -390,6 +552,39 @@ footer{
       <div class="chart-box"><canvas id="ch-dir"></canvas></div>
     </div>
   </div>
+</div>
+
+<!-- ESTADO ACTUAL -->
+<div class="panel" id="panel-estado">
+  <h2 class="section">Estado actual de convocatorias</h2>
+  <div class="estado-toolbar">
+    <div class="filter" style="min-width:120px">
+      <label>Año</label>
+      <select id="f-est-y"></select>
+    </div>
+    <div class="filter" style="min-width:260px;flex:1">
+      <label>Categoría</label>
+      <select id="f-est-c"><option value="">Todas las categorías</option></select>
+    </div>
+    <div class="filter" style="min-width:170px">
+      <label>Dirección</label>
+      <select id="f-est-d"><option value="">Todas</option></select>
+    </div>
+    <button class="btn ghost" id="btn-est-reset" style="align-self:flex-end">Limpiar</button>
+  </div>
+  <div class="est-info" id="est-info" style="margin-bottom:14px;font-size:13px;color:var(--scs-text-muted)">—</div>
+
+  <!-- Aggregate panel (visible when category is selected) -->
+  <div id="est-aggregate" style="display:none;margin-bottom:18px"></div>
+
+  <div class="phase-filter" id="phase-filter">
+    <span class="chip active" data-phase="all">Todas</span>
+    <span class="chip" data-phase="bases">Bases publicadas</span>
+    <span class="chip" data-phase="adex">Ad&amp;Ex provisional</span>
+    <span class="chip" data-phase="prov">Lista provisional</span>
+    <span class="chip" data-phase="def">Lista definitiva</span>
+  </div>
+  <div class="estado-grid" id="estado-grid"></div>
 </div>
 
 <!-- POR AÑO -->
@@ -471,6 +666,7 @@ footer{
 <!-- TIEMPOS -->
 <div class="panel" id="panel-tiempos">
   <h2 class="section">Tiempos de resolución</h2>
+  <div id="insight-tiempos"></div>
   <div class="kpi-grid">
     <div class="kpi"><div class="lbl">Media global</div><div class="val" id="t-mean">—</div><div class="extra">días</div></div>
     <div class="kpi cyan"><div class="lbl">Mediana</div><div class="val" id="t-med">—</div><div class="extra">días</div></div>
@@ -497,9 +693,9 @@ footer{
 <div class="panel" id="panel-tabla">
   <h2 class="section">Datos completos</h2>
   <div class="filters">
-    <div class="filter" style="min-width:240px">
-      <label>Buscar</label>
-      <input type="text" id="f-tab-q" placeholder="Categoría, ID, dirección…">
+    <div class="filter" style="min-width:280px;flex:1">
+      <label>Categoría</label>
+      <select id="f-tab-q"><option value="">Todas las categorías</option></select>
     </div>
     <div class="filter">
       <label>Año</label>
@@ -516,7 +712,7 @@ footer{
     <button class="btn ghost" id="btn-tab-reset">Limpiar</button>
     <button class="btn" id="btn-tab-csv">Descargar CSV</button>
     <div style="flex:1"></div>
-    <span style="font-size:12px;color:var(--scs-text-muted);align-self:center" id="tab-count">— filas</span>
+    <span class="count-pill" id="tab-count">— convocatorias</span>
   </div>
   <div class="table-wrap">
     <div class="table-scroll">
@@ -573,7 +769,8 @@ function tryLogin(){
 }
 document.getElementById('loginBtn').addEventListener('click',tryLogin);
 document.getElementById('pwd').addEventListener('keydown',e=>{ if(e.key==='Enter') tryLogin(); });
-if(sessionStorage.getItem(STORAGE_KEY)==='1'){ showApp(); }
+// Defer auto-login until full script (incl. DATA below) has parsed
+if(sessionStorage.getItem(STORAGE_KEY)==='1'){ setTimeout(showApp,0); }
 
 document.getElementById('logoutBtn').addEventListener('click',()=>{
   sessionStorage.removeItem(STORAGE_KEY);
@@ -625,6 +822,7 @@ document.querySelectorAll('.tab').forEach(t=>{
     const tab = t.dataset.tab;
     document.getElementById('panel-'+tab).classList.add('active');
     if(tab==='anio') renderAnio();
+    if(tab==='estado') renderEstado();
     if(tab==='categoria') renderCat();
     if(tab==='direccion') renderDir();
     if(tab==='tiempos') renderTiempos();
@@ -634,7 +832,7 @@ document.querySelectorAll('.tab').forEach(t=>{
 
 /* ================== INIT ================== */
 function init(){
-  document.getElementById('recordsPill').textContent = DATA.length + ' registros';
+  document.getElementById('recordsPill').textContent = DATA.length + ' convocatorias';
   populateFilters();
   renderResumen();
 }
@@ -658,6 +856,10 @@ function populateFilters(){
   // Tabla filters
   const fTY = document.getElementById('f-tab-y');
   fTY.innerHTML += years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  const fTQ = document.getElementById('f-tab-q');
+  uniq(DATA.map(r=>r.categoria).filter(x=>x)).sort((a,b)=>a.localeCompare(b,'es')).forEach(c=>{
+    fTQ.innerHTML += `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`;
+  });
   const fTD = document.getElementById('f-tab-d');
   uniq(DATA.map(r=>r.direccion).filter(x=>x)).sort().forEach(d=>{
     fTD.innerHTML += `<option value="${d}">${d}</option>`;
@@ -667,7 +869,6 @@ function populateFilters(){
     fTA.innerHTML += `<option value="${a}">${a}</option>`;
   });
   ['f-tab-q','f-tab-y','f-tab-d','f-tab-a'].forEach(id=>{
-    document.getElementById(id).addEventListener('input',renderTabla);
     document.getElementById(id).addEventListener('change',renderTabla);
   });
   document.getElementById('btn-tab-reset').addEventListener('click',()=>{
@@ -684,6 +885,40 @@ function populateFilters(){
       state.tabSort = state.tabSort && state.tabSort.key===key
         ? {key,dir:-state.tabSort.dir} : {key,dir:1};
       renderTabla();
+    });
+  });
+
+  // Estado actual selectors
+  const fEY = document.getElementById('f-est-y');
+  fEY.innerHTML = years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  fEY.value = years[years.length-1];
+  const fEC = document.getElementById('f-est-c');
+  uniq(DATA.map(r=>r.categoria).filter(x=>x)).sort((a,b)=>a.localeCompare(b,'es')).forEach(c=>{
+    fEC.innerHTML += `<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`;
+  });
+  const fED = document.getElementById('f-est-d');
+  uniq(DATA.map(r=>r.direccion).filter(x=>x)).sort().forEach(d=>{
+    fED.innerHTML += `<option value="${d}">${d}</option>`;
+  });
+  ['f-est-y','f-est-c','f-est-d'].forEach(id=>{
+    document.getElementById(id).addEventListener('change',renderEstado);
+  });
+  document.getElementById('btn-est-reset').addEventListener('click',()=>{
+    document.getElementById('f-est-y').value = years[years.length-1];
+    document.getElementById('f-est-c').value = '';
+    document.getElementById('f-est-d').value = '';
+    state.estPhase = 'all';
+    document.querySelectorAll('#phase-filter .chip').forEach(x=>x.classList.remove('active'));
+    document.querySelector('#phase-filter .chip[data-phase="all"]').classList.add('active');
+    renderEstado();
+  });
+  state.estPhase = 'all';
+  document.querySelectorAll('#phase-filter .chip').forEach(c=>{
+    c.addEventListener('click',()=>{
+      document.querySelectorAll('#phase-filter .chip').forEach(x=>x.classList.remove('active'));
+      c.classList.add('active');
+      state.estPhase = c.dataset.phase;
+      renderEstado();
     });
   });
 }
@@ -869,6 +1104,39 @@ function renderTiempos(){
   document.getElementById('t-max').textContent = fmt(maxR.tiempo_dias);
   document.getElementById('t-max-x').textContent = `${maxR.categoria} (${maxR.anio})`;
 
+  // Insight automático: comparar primer año con último año completo
+  const yearsAll = uniq(valid.map(r=>r.anio)).filter(x=>x).sort();
+  // Excluir años en curso con muy pocos registros (último)
+  const useYears = yearsAll.length>=3 ? yearsAll.slice(0,-1) : yearsAll;
+  if(useYears.length>=2){
+    const first = useYears[0];
+    const last = useYears[useYears.length-1];
+    const tFirst = avg(valid.filter(r=>r.anio===first),'tiempo_dias');
+    const tLast = avg(valid.filter(r=>r.anio===last),'tiempo_dias');
+    if(tFirst && tLast){
+      const pct = Math.round((tLast-tFirst)/tFirst*100);
+      const mejora = pct<0;
+      const txt = mejora
+        ? `El tiempo de resolución ha <b>mejorado un ${Math.abs(pct)}%</b> entre ${first} (${Math.round(tFirst)} d) y ${last} (${Math.round(tLast)} d).`
+        : `El tiempo de resolución ha <b>aumentado un ${pct}%</b> entre ${first} (${Math.round(tFirst)} d) y ${last} (${Math.round(tLast)} d).`;
+      // Comparar fase 1 vs fase 2
+      const r1 = sum(valid,'recl_1'), r2 = sum(valid,'recl_2');
+      const extra = (r1 && r2)
+        ? (r2 < r1
+            ? ` Las reclamaciones de fase 2 (${fmt(r2)}) son inferiores a las de fase 1 (${fmt(r1)}), lo que indica que la lista provisional resuelve la mayoría de impugnaciones.`
+            : ` Las reclamaciones de fase 2 (${fmt(r2)}) superan a las de fase 1 (${fmt(r1)}), lo que sugiere disconformidades persistentes tras la lista provisional.`)
+        : '';
+      const ic = mejora ? '📉' : '📈';
+      const cls = mejora ? '' : 'warn';
+      document.getElementById('insight-tiempos').innerHTML =
+        `<div class="insight-banner ${cls}"><span class="ic">${ic}</span><div>${txt}${extra}</div></div>`;
+    } else {
+      document.getElementById('insight-tiempos').innerHTML = '';
+    }
+  } else {
+    document.getElementById('insight-tiempos').innerHTML = '';
+  }
+
   // histogram (bin 30 days)
   const max = Math.ceil(Math.max(...times)/30)*30;
   const bins = []; const labels=[];
@@ -907,9 +1175,166 @@ function renderTiempos(){
   });
 }
 
+/* ================== ESTADO ACTUAL ================== */
+function determinarFase(r){
+  // Heurística basada en datos disponibles:
+  // 3 - Lista definitiva: tiene fecha de RG de lista definitiva (publicada)
+  // 2 - Lista provisional: admitidos_def numérico (no nulo) pero sin fecha definitiva
+  // 1 - Ad&Ex provisional: admitidos_prov numérico pero admitidos_def aún nulo
+  // 0 - Bases publicadas: sólo tiene fecha o RG de bases
+  // -1 - En tramitación: ni bases aún
+  const numProv = (typeof r.admitidos_prov === 'number') ? r.admitidos_prov : null;
+  const numDef  = (typeof r.admitidos_def  === 'number') ? r.admitidos_def  : null;
+
+  if(r.fecha_rg_lista_def && r.publ_lista_def) {
+    return {idx:3, fase:'def', label:'Lista definitiva', cls:'def'};
+  }
+  if(numDef!=null && !r.fecha_rg_lista_def){
+    return {idx:2, fase:'prov', label:'Lista provisional', cls:'prov'};
+  }
+  if(numProv!=null){
+    return {idx:1, fase:'adex', label:'Ad&Ex provisional', cls:'adex'};
+  }
+  if(r.fecha_bases || r.publ_bases || r.rg_bases){
+    return {idx:0, fase:'bases', label:'Bases publicadas', cls:'bases'};
+  }
+  return {idx:-1, fase:'init', label:'En tramitación', cls:'init'};
+}
+
+function fmtFecha(s){
+  if(!s) return '—';
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : s;
+}
+
+function renderEstado(){
+  const y = parseInt(document.getElementById('f-est-y').value);
+  const catSel = document.getElementById('f-est-c').value;
+  const dirSel = document.getElementById('f-est-d').value;
+  const phaseSel = state.estPhase || 'all';
+
+  // Cards: filtrar por año + categoría + dirección + fase
+  let data = DATA.filter(r=>r.anio===y);
+  if(catSel) data = data.filter(r=>r.categoria===catSel);
+  if(dirSel) data = data.filter(r=>r.direccion===dirSel);
+  data = data.map(r=>({...r, _ph:determinarFase(r)}));
+  if(phaseSel !== 'all') data = data.filter(r=>r._ph.fase === phaseSel);
+  data.sort((a,b)=>{
+    if(a._ph.idx !== b._ph.idx) return a._ph.idx - b._ph.idx;
+    return String(a.id).localeCompare(String(b.id),'es',{numeric:true});
+  });
+
+  // Panel de agregado: si hay categoría seleccionada, sumar TODOS los años
+  const aggDiv = document.getElementById('est-aggregate');
+  if(catSel){
+    const allCat = DATA.filter(r=>r.categoria===catSel && (!dirSel || r.direccion===dirSel));
+    const nConv = allCat.length;
+    const nYears = uniq(allCat.map(r=>r.anio)).length;
+    const totPres = sum(allCat,'presentados');
+    const totAdmDef = sum(allCat,'admitidos_def');
+    const totExcDef = sum(allCat,'excluidos_def');
+    const totR1 = sum(allCat,'recl_1');
+    const totR2 = sum(allCat,'recl_2');
+    const tMedio = avg(allCat,'tiempo_dias');
+    const pctExc = totPres ? (totExcDef/totPres*100).toFixed(1) : null;
+    const pctAdm = totPres ? (totAdmDef/totPres*100).toFixed(1) : null;
+    const yMin = Math.min(...allCat.map(r=>r.anio));
+    const yMax = Math.max(...allCat.map(r=>r.anio));
+
+    aggDiv.innerHTML = `<div class="agg-panel">
+      <div class="agg-title">Acumulado histórico${dirSel?` · ${dirSel}`:''}</div>
+      <div class="agg-cat">${catSel}</div>
+      <div class="agg-stats">
+        <div class="agg-stat"><div class="as-val">${fmt(nConv)}</div><div class="as-lbl">Convocatorias</div></div>
+        <div class="agg-stat cyan"><div class="as-val">${fmt(totPres)}</div><div class="as-lbl">Total presentados</div></div>
+        <div class="agg-stat green"><div class="as-val">${fmt(totAdmDef)}</div><div class="as-lbl">Admitidos def.${pctAdm?` (${pctAdm}%)`:''}</div></div>
+        <div class="agg-stat red"><div class="as-val">${fmt(totExcDef)}</div><div class="as-lbl">Excluidos def.${pctExc?` (${pctExc}%)`:''}</div></div>
+        <div class="agg-stat orange"><div class="as-val">${tMedio?fmt(tMedio)+'d':'—'}</div><div class="as-lbl">Tiempo medio</div></div>
+        <div class="agg-stat"><div class="as-val">${fmt(totR1+totR2)}</div><div class="as-lbl">Reclamaciones (R1+R2)</div></div>
+        <div class="agg-stat cyan"><div class="as-val">${nYears}</div><div class="as-lbl">Años con convocatoria${yMin!==yMax?` (${yMin}–${yMax})`:` (${yMin})`}</div></div>
+      </div>
+    </div>`;
+    aggDiv.style.display = 'block';
+  } else {
+    aggDiv.style.display = 'none';
+    aggDiv.innerHTML = '';
+  }
+
+  // Línea informativa con conteo por fase para los filtros activos (año + cat + dir)
+  let scope = DATA.filter(r=>r.anio===y);
+  if(catSel) scope = scope.filter(r=>r.categoria===catSel);
+  if(dirSel) scope = scope.filter(r=>r.direccion===dirSel);
+  const counts = {bases:0,adex:0,prov:0,def:0,init:0};
+  scope.forEach(r=>{ counts[determinarFase(r).fase]++; });
+  const total = counts.bases+counts.adex+counts.prov+counts.def+counts.init;
+  const ctxParts = [`${total} convocatoria${total===1?'':'s'} en ${y}`];
+  if(catSel) ctxParts.push(`categoría seleccionada`);
+  if(dirSel) ctxParts.push(`dirección ${dirSel}`);
+  document.getElementById('est-info').innerHTML = total
+    ? `${ctxParts.join(' · ')} → <b style="color:var(--scs-blue)">${counts.def}</b> def. · <b style="color:#5B2A86">${counts.prov}</b> L. prov. · <b style="color:#856404">${counts.adex}</b> Ad&amp;Ex · <b style="color:#A05E00">${counts.bases}</b> bases`
+    : `Sin convocatorias para los filtros seleccionados`;
+
+  const grid = document.getElementById('estado-grid');
+  if(!data.length){
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">Sin convocatorias para los filtros seleccionados.</div>`;
+    return;
+  }
+
+  const PHASES = [
+    {key:'bases', label:'Bases'},
+    {key:'adex', label:'Ad&Ex'},
+    {key:'prov', label:'L. Prov.'},
+    {key:'def', label:'L. Def.'}
+  ];
+
+  grid.innerHTML = data.map(r=>{
+    const ph = r._ph;
+    const dots = PHASES.map((p,i)=>{
+      let cls = '';
+      if(i < ph.idx) cls = 'done';
+      else if(i === ph.idx) cls = 'current';
+      const sym = (i < ph.idx) ? '✓' : (i+1);
+      return `<div class="ph-step ${cls}">
+        <div class="ph-dot">${sym}</div>
+        <div class="ph-label">${p.label}</div>
+      </div>`;
+    }).join('');
+
+    // Fecha más relevante para mostrar
+    let fechaRel = null, fechaLabel = '';
+    if(ph.idx === 3){ fechaRel = r.publ_lista_def || r.fecha_rg_lista_def; fechaLabel = 'L. def.'; }
+    else if(ph.idx === 2){ fechaRel = r.publ_bases; fechaLabel = 'L. prov.'; }
+    else if(ph.idx === 1){ fechaRel = r.publ_bases || r.fecha_bases; fechaLabel = 'Ad&Ex'; }
+    else if(ph.idx === 0){ fechaRel = r.publ_bases || r.fecha_bases; fechaLabel = 'Bases'; }
+    else { fechaRel = r.fecha_entrada; fechaLabel = 'Entrada'; }
+
+    const presStr = (r.presentados!=null && typeof r.presentados==='number') ? `${fmt(r.presentados)} pres.` : '—';
+    const dir = r.direccion ? `<div class="ec-dir">${r.direccion}</div>` : '';
+
+    return `<div class="estado-card">
+      ${dir}
+      <div class="ec-head">
+        <div>
+          <div class="ec-title">${r.categoria||'Sin categoría'}</div>
+          <div class="ec-id">ID ${r.id||'—'} · ${r.anio}</div>
+        </div>
+        <span class="phase-chip ${ph.cls}">${ph.label}</span>
+      </div>
+      <div class="phase-bar">${dots}</div>
+      <div class="ec-meta">
+        <span>👤 <b>${presStr}</b></span>
+        <span>📅 ${fechaLabel}: <b>${fmtFecha(fechaRel)}</b></span>
+        ${r.recl_1>0 ? `<span>📝 R1: <b>${r.recl_1}</b></span>` : ''}
+        ${r.recl_2>0 ? `<span>📝 R2: <b>${r.recl_2}</b></span>` : ''}
+        ${r.observaciones ? `<span style="flex-basis:100%;font-style:italic;color:#A05E00">⚠ ${r.observaciones}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 /* ================== TABLA ================== */
 function getTableData(){
-  const q = document.getElementById('f-tab-q').value.toLowerCase().trim();
+  const cat = document.getElementById('f-tab-q').value;
   const y = document.getElementById('f-tab-y').value;
   const dir = document.getElementById('f-tab-d').value;
   const ar = document.getElementById('f-tab-a').value;
@@ -917,10 +1342,7 @@ function getTableData(){
     if(y && r.anio!=parseInt(y)) return false;
     if(dir && r.direccion!==dir) return false;
     if(ar && r.area!==ar) return false;
-    if(q){
-      const bag = `${r.id||''} ${r.categoria||''} ${r.direccion||''} ${r.area||''} ${r.rg_lista_def||''}`.toLowerCase();
-      if(!bag.includes(q)) return false;
-    }
+    if(cat && r.categoria!==cat) return false;
     return true;
   });
   if(state.tabSort){
@@ -936,7 +1358,7 @@ function getTableData(){
 }
 function renderTabla(){
   const data = getTableData();
-  document.getElementById('tab-count').textContent = `${data.length} filas`;
+  document.getElementById('tab-count').textContent = `${data.length} ${data.length===1?'convocatoria':'convocatorias'}`;
   const tb = document.querySelector('#tab-main tbody');
   if(!data.length){ tb.innerHTML = '<tr><td colspan="11" class="empty">Sin resultados</td></tr>'; return; }
   const slice = data.slice(0,500);
@@ -954,7 +1376,7 @@ function renderTabla(){
     <td>${r.rg_lista_def||''}</td>
   </tr>`).join('');
   if(data.length>500){
-    tb.innerHTML += `<tr><td colspan="11" class="empty">Mostrando primeras 500 filas de ${data.length}. Use filtros para reducir.</td></tr>`;
+    tb.innerHTML += `<tr><td colspan="11" class="empty">Mostrando primeras 500 convocatorias de ${data.length}. Use filtros para reducir.</td></tr>`;
   }
 }
 function exportCSV(){
